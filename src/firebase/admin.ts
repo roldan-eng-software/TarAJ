@@ -36,6 +36,7 @@ function ensureInit(): void {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
+    admin.firestore().settings({ ignoreUndefinedProperties: true });
     _initialized = true;
   } catch (error) {
     _initError = error instanceof Error ? error : new Error(String(error));

@@ -40,7 +40,7 @@ export async function createTask(
     updatedBy: creator.uid,
   };
 
-  const ref = await adminDb.collection('tasks').add(taskData);
+    const ref = await adminDb.collection('tasks').add(taskData);
   const task: Task = { ...taskData, id: ref.id };
 
   // Record history
