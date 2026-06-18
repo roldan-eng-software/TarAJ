@@ -1,0 +1,111 @@
+// Firestore Security Rules
+// Default deny-by-default approach for legal tasks application
+// Rules are evaluated server-side; this is the declarative security layer
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default: deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Users collection: authenticated users can read/write their own profile
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId;
+      allow write: if request.auth.uid == userId && hasRole(userId, 'administrator');
+    }
+
+    // Roles collection: read-only for authenticated users
+    match /roles/{roleId} {
+      allow read: if request.auth != null;
+      allow write: if hasRole(request.auth.uid, 'administrator');
+    }
+
+    // Tasks collection and subcollections
+    match /tasks/{taskId} {
+      allow read: if request.auth != null && canAccessTask(request.auth.uid, taskId);
+      allow create: if request.auth != null && hasRole(request.auth.uid, ['coordinator', 'administrator']);
+      allow update: if request.auth != null && canAccessTask(request.auth.uid, taskId) && !isArchivedWriteOnly();
+      allow delete: if false; // Prevent task deletion; use archiving instead
+
+      // Task history subcollection: append-only
+      match /history/{historyId} {
+        allow read: if request.auth != null && canAccessTask(request.auth.uid, resource.data.taskId);
+        allow create: if request.auth != null && request.resource.data.createdBy == request.auth.uid;
+        allow update, delete: if false;
+      }
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if request.auth != null && canAccessTask(request.auth.uid, resource.data.taskId);
+        allow create: if request.auth != null && hasRole(request.auth.uid, ['collaborator', 'coordinator', 'administrator']);
+        allow update: if request.auth != null && resource.data.createdBy == request.auth.uid;
+        allow delete: if false; // Comments are immutable for audit
+      }
+
+      // Attachments subcollection
+      match /attachments/{attachmentId} {
+        allow read: if request.auth != null && canAccessTask(request.auth.uid, resource.data.taskId);
+        allow create: if request.auth != null && hasRole(request.auth.uid, ['collaborator', 'coordinator', 'administrator']);
+        allow update, delete: if false;
+      }
+    }
+
+    // Alerts collection
+    match /alerts/{alertId} {
+      allow read: if request.auth != null && resource.data.recipientId == request.auth.uid;
+      allow create: if request.auth != null; // Created by server-side functions
+      allow update: if request.auth != null && resource.data.recipientId == request.auth.uid; // Mark as read
+      allow delete: if false;
+    }
+
+    // Audit logs: append-only, highly restricted read
+    match /auditLogs/{auditId} {
+      allow read: if request.auth != null && hasRole(request.auth.uid, ['administrator', 'internal_reader']);
+      allow create: if request.auth != null; // Created by server-side functions
+      allow update, delete: if false;
+    }
+
+    // Workflow stages: read-only
+    match /workflowStages/{stageId} {
+      allow read: if request.auth != null;
+      allow write: if hasRole(request.auth.uid, 'administrator');
+    }
+
+    // Email queue: admin read, server-side write
+    match /emailQueue/{jobId} {
+      allow read: if request.auth != null && hasRole(request.auth.uid, 'administrator');
+      allow write: if false; // Managed by server functions
+    }
+
+    // Helper functions
+    function isArchivedWriteOnly() {
+      return resource.data.archived == true && request.resource.data.archived == true;
+    }
+
+    function hasRole(userId, roles) {
+      let userRole = get(/databases/$(database)/documents/users/$(userId)).data.roleId;
+      return userRole in (roles is list ? roles : [roles]);
+    }
+
+    function canAccessTask(userId, taskId) {
+      let task = get(/databases/$(database)/documents/tasks/$(taskId)).data;
+      let userRole = get(/databases/$(database)/documents/users/$(userId)).data.roleId;
+
+      // Administrators can access any task
+      if (userRole == 'administrator') {
+        return true;
+      }
+
+      // Internal readers can read any task but cannot modify
+      if (userRole == 'internal_reader' && !request.method in ['write', 'update', 'delete']) {
+        return true;
+      }
+
+      // Collaborators and coordinators can access tasks they created or are responsible for
+      return task.createdBy == userId || task.responsibleUserId == userId || userId in task.participantIds;
+    }
+  }
+}

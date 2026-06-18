@@ -1,0 +1,86 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "tasks",
+      "queryScope": "Collection",
+      "fields": [
+        { "fieldPath": "archived", "order": "Ascending" },
+        { "fieldPath": "stageId", "order": "Ascending" }
+      ]
+    },
+    {
+      "collectionGroup": "tasks",
+      "queryScope": "Collection",
+      "fields": [
+        { "fieldPath": "responsibleUserId", "order": "Ascending" },
+        { "fieldPath": "archived", "order": "Ascending" }
+      ]
+    },
+    {
+      "collectionGroup": "tasks",
+      "queryScope": "Collection",
+      "fields": [
+        { "fieldPath": "archived", "order": "Ascending" },
+        { "fieldPath": "updatedAt", "order": "Descending" }
+      ]
+    },
+    {
+      "collectionGroup": "tasks",
+      "queryScope": "Collection",
+      "fields": [
+        { "fieldPath": "dueDate", "order": "Ascending" },
+        { "fieldPath": "archived", "order": "Ascending" }
+      ]
+    },
+    {
+      "collectionGroup": "alerts",
+      "queryScope": "Collection",
+      "fields": [
+        { "fieldPath": "recipientId", "order": "Ascending" },
+        { "fieldPath": "readAt", "order": "Ascending" }
+      ]
+    },
+    {
+      "collectionGroup": "alerts",
+      "queryScope": "Collection",
+      "fields": [
+        { "fieldPath": "recipientId", "order": "Ascending" },
+        { "fieldPath": "createdAt", "order": "Descending" }
+      ]
+    },
+    {
+      "collectionGroup": "alerts",
+      "queryScope": "Collection",
+      "fields": [
+        { "fieldPath": "recipientId", "order": "Ascending" },
+        { "fieldPath": "readAt", "order": "Ascending" },
+        { "fieldPath": "createdAt", "order": "Descending" }
+      ]
+    },
+    {
+      "collectionGroup": "auditLogs",
+      "queryScope": "Collection",
+      "fields": [
+        { "fieldPath": "resourceType", "order": "Ascending" },
+        { "fieldPath": "occurredAt", "order": "Descending" }
+      ]
+    },
+    {
+      "collectionGroup": "auditLogs",
+      "queryScope": "Collection",
+      "fields": [
+        { "fieldPath": "actorUserId", "order": "Ascending" },
+        { "fieldPath": "occurredAt", "order": "Descending" }
+      ]
+    },
+    {
+      "collectionGroup": "tasks",
+      "queryScope": "Collection",
+      "fields": [
+        { "fieldPath": "archived", "order": "Ascending" },
+        { "fieldPath": "category", "order": "Ascending" },
+        { "fieldPath": "updatedAt", "order": "Descending" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+/* Global Styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Sober, professional color scheme for internal legal tool */
+:root {
+  --color-primary: #1f2937; /* slate-800 */
+  --color-secondary: #4b5563; /* slate-700 */
+  --color-accent: #0ea5e9; /* sky-500 */
+  --color-success: #10b981; /* emerald-500 */
+  --color-warning: #f59e0b; /* amber-500 */
+  --color-danger: #ef4444; /* red-500 */
+  --color-border: #e5e7eb; /* gray-200 */
+  --color-bg: #ffffff;
+  --color-text: #1f2937;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-white text-gray-900 font-sans antialiased;
+}
+
+/* Utility Classes */
+.container-padded {
+  @apply px-4 md:px-6 lg:px-8;
+}
+
+.button-base {
+  @apply px-4 py-2 rounded transition-colors font-medium;
+}
+
+.button-primary {
+  @apply button-base bg-sky-500 text-white hover:bg-sky-600;
+}
+
+.button-secondary {
+  @apply button-base bg-gray-200 text-gray-900 hover:bg-gray-300;
+}
+
+.button-danger {
+  @apply button-base bg-red-500 text-white hover:bg-red-600;
+}
+
+.input-base {
+  @apply px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-sky-500;
+}
+
+.card {
+  @apply bg-white border border-gray-200 rounded-lg shadow-sm;
+}
