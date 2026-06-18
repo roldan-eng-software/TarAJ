@@ -67,12 +67,12 @@ export interface Task {
   title: string;
   description: string;
   category: string;
-  priority: 'baixa' | 'média' | 'alta' | 'crítica';
+  priority: 'baixa' | 'normal' | 'alta' | 'crítica';
   stageId: StageId;
   responsibleUserId: string;
   participantIds: string[];
   dueDate?: Date;
-  confidentialityLevel: 'público' | 'interno' | 'restrito';
+  confidentialityLevel: 'interno' | 'restrito' | 'público';
   internalNotes?: string;
   archived: boolean;
   archivedAt?: Date;
@@ -185,7 +185,7 @@ export interface CreateTaskInput {
   priority: Task['priority'];
   responsibleUserId: string;
   participantIds: string[];
-  dueDate?: Date;
+  dueDate?: string | Date;
   confidentialityLevel: Task['confidentialityLevel'];
   internalNotes?: string;
 }
@@ -196,7 +196,8 @@ export interface UpdateTaskInput {
   priority?: Task['priority'];
   responsibleUserId?: string;
   participantIds?: string[];
-  dueDate?: Date;
+  dueDate?: string | Date;
+  confidentialityLevel?: Task['confidentialityLevel'];
   internalNotes?: string;
 }
 

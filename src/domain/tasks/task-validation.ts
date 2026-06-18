@@ -3,16 +3,16 @@
 
 import { z } from 'zod';
 
-// Task validation schema
+// Task validation schema (aligned with form values and Firebase UIDs)
 export const CreateTaskSchema = z.object({
   title: z.string().min(3).max(200),
   description: z.string().min(10).max(5000),
   category: z.string().min(2).max(100),
-  priority: z.enum(['baixa', 'média', 'alta', 'crítica']),
-  responsibleUserId: z.string().uuid(),
-  participantIds: z.array(z.string().uuid()),
-  dueDate: z.date().optional(),
-  confidentialityLevel: z.enum(['público', 'interno', 'restrito']),
+  priority: z.enum(['baixa', 'normal', 'alta', 'crítica']),
+  responsibleUserId: z.string().min(1),
+  participantIds: z.array(z.string()).default([]),
+  dueDate: z.string().optional(),
+  confidentialityLevel: z.enum(['interno', 'restrito', 'público']).default('interno'),
   internalNotes: z.string().max(1000).optional(),
 });
 

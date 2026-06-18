@@ -29,8 +29,8 @@ export async function createTask(
     priority: input.priority,
     stageId: 'entrada',
     responsibleUserId: input.responsibleUserId,
-    participantIds: input.participantIds,
-    dueDate: input.dueDate,
+    participantIds: input.participantIds || [],
+    dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
     confidentialityLevel: input.confidentialityLevel,
     internalNotes: input.internalNotes,
     archived: false,
@@ -152,6 +152,7 @@ export async function updateTask(
   const now = new Date();
   const updates: Record<string, unknown> = {
     ...input,
+    dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
     updatedAt: now,
     updatedBy: updater.uid,
   };

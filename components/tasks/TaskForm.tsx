@@ -16,7 +16,7 @@ export interface TaskFormData {
   responsibleUserId: string;
   participantIds: string[];
   dueDate?: string;
-  confidentialityLevel: string;
+  confidentialityLevel: 'interno' | 'restrito' | 'público';
   internalNotes?: string;
 }
 
@@ -27,6 +27,7 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
   const [priority, setPriority] = useState(initialData?.priority || 'normal');
   const [responsibleUserId, setResponsibleUserId] = useState(initialData?.responsibleUserId || '');
   const [dueDate, setDueDate] = useState(initialData?.dueDate || '');
+  const [confidentialityLevel, setConfidentialityLevel] = useState(initialData?.confidentialityLevel || 'interno');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +39,7 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
       responsibleUserId,
       participantIds: [],
       dueDate,
-      confidentialityLevel: 'padrão',
+      confidentialityLevel,
     });
   };
 
@@ -107,6 +108,18 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
           onChange={(e) => setDueDate(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
         />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-900 mb-1">Confidencialidade</label>
+        <select
+          value={confidentialityLevel}
+          onChange={(e) => setConfidentialityLevel(e.target.value as TaskFormData['confidentialityLevel'])}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
+        >
+          <option value="interno">Interno</option>
+          <option value="restrito">Restrito</option>
+          <option value="público">Público</option>
+        </select>
       </div>
       <button
         type="submit"
