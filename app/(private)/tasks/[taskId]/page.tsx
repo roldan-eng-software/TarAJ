@@ -20,9 +20,10 @@ export default function TaskDetailPage() {
   const [activeTab, setActiveTab] = useState<Tab>('history');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usersMap, setUsersMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const fetchTask = async () => {
+    const fetchTaskAndUsers = async () => {
       try {
         setLoading(true);
         const token = document.cookie
@@ -31,6 +32,17 @@ export default function TaskDetailPage() {
           ?.split('=')[1];
 
         const headers: HeadersInit = token ? { authorization: `Bearer ${token}` } : {};
+
+        // Fetch users mapping
+        const usersRes = await fetch('/api/users', { headers });
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          const mapping: Record<string, string> = {};
+          usersData.users.forEach((u: any) => {
+            mapping[u.id] = u.displayName;
+          });
+          setUsersMap(mapping);
+        }
 
         const [taskRes, commentsRes, attachmentsRes] = await Promise.all([
           fetch(`/api/tasks/${taskId}`, { headers }),
@@ -52,7 +64,7 @@ export default function TaskDetailPage() {
       }
     };
 
-    fetchTask();
+    fetchTaskAndUsers();
   }, [taskId]);
 
   if (loading) {
@@ -91,7 +103,9 @@ export default function TaskDetailPage() {
           <dl className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <dt className="text-gray-500">Responsável</dt>
-              <dd className="font-medium">{task.responsibleUserId}</dd>
+              <dd className="font-semibold text-gray-950">
+                {usersMap[task.responsibleUserId] || task.responsibleUserId}
+              </dd>
             </div>
             <div>
               <dt className="text-gray-500">Prazo</dt>
@@ -141,3 +155,4 @@ export default function TaskDetailPage() {
     </div>
   );
 }
+

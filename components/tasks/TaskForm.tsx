@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface TaskFormProps {
   onSubmit?: (data: TaskFormData) => void;
@@ -28,6 +28,37 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
   const [responsibleUserId, setResponsibleUserId] = useState(initialData?.responsibleUserId || '');
   const [dueDate, setDueDate] = useState(initialData?.dueDate || '');
   const [confidentialityLevel, setConfidentialityLevel] = useState(initialData?.confidentialityLevel || 'interno');
+  const [users, setUsers] = useState<{ id: string; displayName: string }[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('token='))
+          ?.split('=')[1];
+
+        const headers: HeadersInit = token ? { authorization: `Bearer ${token}` } : {};
+        const res = await fetch('/api/users', { headers });
+
+        if (res.ok) {
+          const data = await res.json();
+          setUsers(data.users || []);
+          // Auto-select first user if none selected
+          if (!responsibleUserId && data.users?.length > 0) {
+            setResponsibleUserId(data.users[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load users for selector', err);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    fetchUsers();
+  }, [responsibleUserId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +83,7 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
         />
       </div>
       <div>
@@ -62,7 +93,7 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
           onChange={(e) => setDescription(e.target.value)}
           required
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -73,7 +104,7 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
           />
         </div>
         <div>
@@ -81,7 +112,7 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
           >
             <option value="baixa">Baixa</option>
             <option value="normal">Normal</option>
@@ -92,13 +123,23 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-900 mb-1">Responsável</label>
-        <input
-          type="text"
-          value={responsibleUserId}
-          onChange={(e) => setResponsibleUserId(e.target.value)}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
-        />
+        {loadingUsers ? (
+          <div className="text-xs text-gray-500 py-2">Carregando usuários...</div>
+        ) : (
+          <select
+            value={responsibleUserId}
+            onChange={(e) => setResponsibleUserId(e.target.value)}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
+          >
+            <option value="" disabled>Selecione um responsável</option>
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.displayName} ({user.email})
+              </option>
+            ))}
+          </select>
+        )}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-900 mb-1">Prazo</label>
@@ -106,7 +147,7 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
         />
       </div>
       <div>
@@ -114,7 +155,7 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
         <select
           value={confidentialityLevel}
           onChange={(e) => setConfidentialityLevel(e.target.value as TaskFormData['confidentialityLevel'])}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
         >
           <option value="interno">Interno</option>
           <option value="restrito">Restrito</option>
@@ -130,3 +171,4 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
     </form>
   );
 }
+
