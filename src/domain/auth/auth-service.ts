@@ -14,20 +14,39 @@ export async function getCurrentFirebaseUser() {
 
 /**
  * Get session from cookies or client auth
- * (Implementation depends on auth strategy)
+ * Auto-creates user profile if it doesn't exist yet (first-login bootstrap)
  */
 export async function getSessionUser(token: string): Promise<SessionUser | null> {
   try {
-    // Verify Firebase ID token on server-side
     const decodedToken = await adminAuth.verifyIdToken(token);
     if (!decodedToken) return null;
 
-    // Load internal user profile from Firestore
-    const userDoc = await adminDb.collection('users').doc(decodedToken.uid).get();
+    const userRef = adminDb.collection('users').doc(decodedToken.uid);
+    const userDoc = await userRef.get();
 
     if (!userDoc.exists) {
-      console.warn(`User profile not found for ${decodedToken.uid}`);
-      return null;
+      const now = new Date();
+      const userData = {
+        displayName: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
+        email: decodedToken.email || '',
+        roleId: 'internal_reader' as const,
+        status: 'active' as const,
+        createdAt: now,
+        createdBy: 'system',
+        updatedAt: now,
+        updatedBy: 'system',
+      };
+
+      await userRef.set(userData);
+      console.log(`Auto-created user profile for ${decodedToken.uid}`);
+
+      return {
+        uid: decodedToken.uid,
+        email: userData.email,
+        displayName: userData.displayName,
+        roleId: userData.roleId,
+        permissions: [],
+      };
     }
 
     const userData = userDoc.data() as User;
@@ -37,7 +56,7 @@ export async function getSessionUser(token: string): Promise<SessionUser | null>
       email: decodedToken.email || '',
       displayName: userData.displayName,
       roleId: userData.roleId,
-      permissions: [], // To be loaded from role
+      permissions: [],
     };
   } catch (error) {
     console.error('Session verification failed:', error);

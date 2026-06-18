@@ -15,9 +15,10 @@ import { randomUUID } from 'crypto';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
+    const { taskId } = await params;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,7 +31,7 @@ export async function GET(
 
     assertCan(session, 'view', 'task');
 
-    const attachments = await getTaskAttachments(params.taskId);
+    const attachments = await getTaskAttachments(taskId);
     
     // Try to add download URLs, gracefully handle if storage not available
     let attachmentsWithUrls;
@@ -38,7 +39,7 @@ export async function GET(
       attachmentsWithUrls = await Promise.all(
         attachments.map(async (att) => ({
           ...att,
-          downloadUrl: await getDownloadUrl(params.taskId, att.id),
+          downloadUrl: await getDownloadUrl(taskId, att.id),
         }))
       );
     } catch {
@@ -58,9 +59,10 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
+    const { taskId } = await params;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -88,7 +90,7 @@ export async function POST(
     }
 
     const attachmentId = randomUUID();
-    const storagePath = `tasks/${params.taskId}/attachments/${attachmentId}`;
+    const storagePath = `tasks/${taskId}/attachments/${attachmentId}`;
     
     // Upload to Cloud Storage
     const buffer = await file.arrayBuffer();
@@ -98,9 +100,8 @@ export async function POST(
       },
     });
 
-    // Create metadata record
     const attachment = await createAttachmentMetadata(
-      params.taskId,
+      taskId,
       attachmentId,
       file.name,
       file.size,
@@ -108,7 +109,7 @@ export async function POST(
       session
     );
 
-    const downloadUrl = await getDownloadUrl(params.taskId, attachmentId);
+    const downloadUrl = await getDownloadUrl(taskId, attachmentId);
 
     return NextResponse.json(
       { ...attachment, downloadUrl },
@@ -123,32 +124,4 @@ export async function POST(
   }
 }
 
-/**
- * DELETE /api/tasks/[taskId]/attachments/[attachmentId]
- * Delete an attachment
- */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { taskId: string; attachmentId: string } }
-) {
-  try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
-    const session = await getSessionUser(token);
-    if (!session) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    assertCan(session, 'delete', 'attachment');
-
-    await deleteAttachment(params.taskId, params.attachmentId, session);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting attachment:', error);
-    return NextResponse.json({ error: 'Failed to delete attachment' }, { status: 500 });
-  }
-}

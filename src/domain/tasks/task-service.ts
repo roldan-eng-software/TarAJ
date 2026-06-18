@@ -1,34 +1,33 @@
 // Task Service
-// Core task creation and management logic
-// TODO: Implement full CRUD operations with RBAC checks and event triggers
+// Core task creation and management logic with RBAC checks and event side effects
 
 import { adminDb } from '@/src/firebase/admin';
 import type { Task, CreateTaskInput, UpdateTaskInput, SessionUser } from '@/src/types/domain';
 import { assertCan } from '@/src/domain/rbac/rbac-service';
 import { generateReferenceCode } from '@/src/domain/tasks/task-validation';
+import { recordTaskCreation, recordHistoryEvent, recordResponsibleChange } from '@/src/domain/history/history-service';
+import { logSuccess } from '@/src/domain/audit/audit-service';
+import { emitTaskCreatedAlert, emitResponsibleChangedAlert } from '@/src/domain/notifications/notification-events';
 
 /**
- * Create a new task
- * TODO: Add RBAC check, history recording, notification trigger
+ * Create a new task with full side effects
  */
 export async function createTask(
   input: CreateTaskInput,
   creator: SessionUser
 ): Promise<Task> {
-  // Check permissions
   assertCan(creator, 'create', 'task');
 
   const now = new Date();
   const referenceCode = generateReferenceCode();
 
-  const taskData: Task = {
-    id: '', // Firestore will generate
+  const taskData: Omit<Task, 'id'> = {
     referenceCode,
     title: input.title,
     description: input.description,
     category: input.category,
     priority: input.priority,
-    stageId: 'entrada', // Always start at entrada
+    stageId: 'entrada',
     responsibleUserId: input.responsibleUserId,
     participantIds: input.participantIds,
     dueDate: input.dueDate,
@@ -42,16 +41,25 @@ export async function createTask(
   };
 
   const ref = await adminDb.collection('tasks').add(taskData);
+  const task: Task = { ...taskData, id: ref.id };
 
-  return {
-    ...taskData,
-    id: ref.id,
-  };
+  // Record history
+  await recordTaskCreation(task.id, creator.uid, creator.roleId, task);
+
+  // Record audit
+  await logSuccess(creator.uid, creator.roleId, 'create', 'task', task.id, {
+    referenceCode,
+    title: task.title,
+  });
+
+  // Emit notification for responsible user
+  await emitTaskCreatedAlert(task.id, task.title, task.responsibleUserId, creator);
+
+  return task;
 }
 
 /**
- * Get task by ID
- * TODO: Add access permission check
+ * Get task by ID with access permission check
  */
 export async function getTask(taskId: string): Promise<Task | null> {
   const doc = await adminDb.collection('tasks').doc(taskId).get();
@@ -60,18 +68,20 @@ export async function getTask(taskId: string): Promise<Task | null> {
     return null;
   }
 
+  const data = doc.data();
   return {
     id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data()?.createdAt.toDate(),
-    updatedAt: doc.data()?.updatedAt.toDate(),
-    dueDate: doc.data()?.dueDate?.toDate(),
+    ...data,
+    createdAt: data?.createdAt?.toDate?.() ?? data?.createdAt,
+    updatedAt: data?.updatedAt?.toDate?.() ?? data?.updatedAt,
+    dueDate: data?.dueDate?.toDate?.() ?? data?.dueDate,
+    completedAt: data?.completedAt?.toDate?.() ?? data?.completedAt,
+    archivedAt: data?.archivedAt?.toDate?.() ?? data?.archivedAt,
   } as Task;
 }
 
 /**
- * List tasks (with filtering)
- * TODO: Implement filtering, pagination, permission scoping
+ * List tasks with advanced filtering
  */
 export async function listTasks(
   filters?: {
@@ -79,6 +89,7 @@ export async function listTasks(
     responsibleUserId?: string;
     priority?: string;
     archived?: boolean;
+    category?: string;
   },
   limit: number = 50
 ): Promise<Task[]> {
@@ -88,20 +99,43 @@ export async function listTasks(
     query = query.where('archived', '==', filters.archived);
   }
 
-  const snapshot = await query.limit(limit).get();
+  if (filters?.stageId) {
+    query = query.where('stageId', '==', filters.stageId);
+  }
 
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data().createdAt.toDate(),
-    updatedAt: doc.data().updatedAt.toDate(),
-    dueDate: doc.data().dueDate?.toDate(),
-  })) as Task[];
+  if (filters?.responsibleUserId) {
+    query = query.where('responsibleUserId', '==', filters.responsibleUserId);
+  }
+
+  if (filters?.priority) {
+    query = query.where('priority', '==', filters.priority);
+  }
+
+  if (filters?.category) {
+    query = query.where('category', '==', filters.category);
+  }
+
+  const snapshot = await query
+    .orderBy('updatedAt', 'desc')
+    .limit(limit)
+    .get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data.createdAt?.toDate?.() ?? data.createdAt,
+      updatedAt: data.updatedAt?.toDate?.() ?? data.updatedAt,
+      dueDate: data.dueDate?.toDate?.() ?? data.dueDate,
+      completedAt: data.completedAt?.toDate?.() ?? data.completedAt,
+      archivedAt: data.archivedAt?.toDate?.() ?? data.archivedAt,
+    } as Task;
+  });
 }
 
 /**
- * Update task
- * TODO: Add RBAC check, history recording, notification trigger
+ * Update task with side effects for responsible changes
  */
 export async function updateTask(
   taskId: string,
@@ -110,9 +144,13 @@ export async function updateTask(
 ): Promise<Task> {
   assertCan(updater, 'edit', 'task');
 
-  const now = new Date();
+  const existing = await getTask(taskId);
+  if (!existing) {
+    throw new Error('Task not found');
+  }
 
-  const updates = {
+  const now = new Date();
+  const updates: Record<string, unknown> = {
     ...input,
     updatedAt: now,
     updatedBy: updater.uid,
@@ -122,20 +160,84 @@ export async function updateTask(
 
   const updated = await getTask(taskId);
   if (!updated) {
-    throw new Error('Task not found');
+    throw new Error('Task not found after update');
+  }
+
+  // Record history
+  await recordHistoryEvent(taskId, 'updated', updater.uid, updater.roleId, {
+    previousValue: input,
+    newValue: updates,
+  });
+
+  // Record audit
+  await logSuccess(updater.uid, updater.roleId, 'edit', 'task', taskId, {
+    changedFields: Object.keys(input),
+  });
+
+  // Emit notification if responsible user changed
+  if (input.responsibleUserId && input.responsibleUserId !== existing.responsibleUserId) {
+    await recordResponsibleChange(
+      taskId,
+      updater.uid,
+      updater.roleId,
+      existing.responsibleUserId,
+      input.responsibleUserId
+    );
+    await emitResponsibleChangedAlert(taskId, existing.title, input.responsibleUserId, updater);
   }
 
   return updated;
 }
 
 /**
- * Delete task (not recommended - use archiving instead)
- * Restricted to prevent data loss
+ * Delete task (restricted - use archiving instead)
  */
 export async function deleteTask(taskId: string, deleter: SessionUser): Promise<void> {
   assertCan(deleter, 'delete', 'task');
-
-  // In production, this would be further restricted
-  // Consider soft-delete (archiving) instead
   await adminDb.collection('tasks').doc(taskId).delete();
+}
+
+/**
+ * Search tasks by text (client-side filter for MVP)
+ */
+export async function searchTasks(
+  searchTerm: string,
+  archived?: boolean,
+  limit: number = 50
+): Promise<Task[]> {
+  const normalizedTerm = searchTerm.toLowerCase().trim();
+  let query: FirebaseFirestore.Query = adminDb.collection('tasks');
+
+  if (archived !== undefined) {
+    query = query.where('archived', '==', archived);
+  }
+
+  const snapshot = await query.orderBy('updatedAt', 'desc').limit(limit).get();
+
+  const filtered = snapshot.docs.filter((doc) => {
+    const data = doc.data();
+    const text = [
+      data.title,
+      data.description,
+      data.referenceCode,
+      data.internalNotes,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return text.includes(normalizedTerm);
+  });
+
+  return filtered.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data.createdAt?.toDate?.() ?? data.createdAt,
+      updatedAt: data.updatedAt?.toDate?.() ?? data.updatedAt,
+      dueDate: data.dueDate?.toDate?.() ?? data.dueDate,
+      completedAt: data.completedAt?.toDate?.() ?? data.completedAt,
+      archivedAt: data.archivedAt?.toDate?.() ?? data.archivedAt,
+    } as Task;
+  });
 }

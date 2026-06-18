@@ -15,9 +15,10 @@ import { adminDb } from '@/src/firebase/admin';
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
+    const { taskId } = await params;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,7 +31,7 @@ export async function POST(
 
     assertCan(session, 'edit', 'task');
 
-    const task = await getTask(params.taskId);
+    const task = await getTask(taskId);
     if (!task) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
@@ -45,8 +46,7 @@ export async function POST(
 
     const now = new Date();
 
-    // Update task
-    await adminDb.collection('tasks').doc(params.taskId).update({
+    await adminDb.collection('tasks').doc(taskId).update({
       archived: true,
       archivedAt: now,
       archivedBy: session.uid,
@@ -54,10 +54,9 @@ export async function POST(
       updatedBy: session.uid,
     });
 
-    // Record history, audit and alerts
     await onTaskArchived(task, session);
 
-    const updated = await getTask(params.taskId);
+    const updated = await getTask(taskId);
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {
     console.error('Error archiving task:', error);
@@ -74,9 +73,10 @@ export async function POST(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
+    const { taskId } = await params;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -89,23 +89,20 @@ export async function PUT(
 
     assertCan(session, 'edit', 'task');
 
-    const task = await getTask(params.taskId);
+    const task = await getTask(taskId);
     if (!task) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    // Only allow restoring archived tasks
     if (!task.archived) {
       return NextResponse.json({ error: 'Task is not archived' }, { status: 400 });
     }
 
     const now = new Date();
-
-    // Restore to previous stage or default to entrada
     const body = await request.json();
     const targetStage = body.stageId || 'entrada';
 
-    await adminDb.collection('tasks').doc(params.taskId).update({
+    await adminDb.collection('tasks').doc(taskId).update({
       archived: false,
       stageId: targetStage,
       archivedAt: null,
@@ -114,10 +111,9 @@ export async function PUT(
       updatedBy: session.uid,
     });
 
-    // Record history, audit and alerts
     await onTaskRestored(task, session, targetStage);
 
-    const updated = await getTask(params.taskId);
+    const updated = await getTask(taskId);
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {
     console.error('Error restoring task:', error);

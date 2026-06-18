@@ -1,51 +1,84 @@
 // Firebase Admin SDK Configuration
-// This file initializes the Firebase Admin SDK for server-side use
-// Should only be imported in server-side code and Route Handlers
+// Lazy initialization for server-side use to prevent build-time failures
 
 import * as admin from 'firebase-admin';
 
-const adminSDKKey = process.env.FIREBASE_ADMIN_SDK_KEY;
+let _initialized = false;
 
-if (!admin.apps.length) {
-  let serviceAccount;
-
-  try {
-    // Try to parse as JSON first
-    if (adminSDKKey && adminSDKKey.startsWith('{')) {
-      serviceAccount = JSON.parse(adminSDKKey);
-    } else {
-      // Otherwise, assume it's a file path and require it
-      serviceAccount = require(adminSDKKey || '');
-    }
-  } catch (error) {
-    console.warn(
-      'Firebase Admin SDK not configured. Server-side operations will fail.',
-      error
-    );
+function ensureInit(): void {
+  if (_initialized) return;
+  if (admin.apps.length) {
+    _initialized = true;
+    return;
   }
 
-  if (serviceAccount) {
+  const key = process.env.FIREBASE_ADMIN_SDK_KEY;
+  if (!key) {
+    console.warn('Firebase Admin SDK not configured: FIREBASE_ADMIN_SDK_KEY not set.');
+    return;
+  }
+
+  try {
+    let serviceAccount: admin.ServiceAccount;
+    if (key.startsWith('{')) {
+      serviceAccount = JSON.parse(key);
+    } else {
+      serviceAccount = require(key) as admin.ServiceAccount;
+    }
+
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
+    _initialized = true;
+  } catch (error) {
+    console.warn('Firebase Admin SDK not configured.', (error as Error).message);
   }
 }
 
-export const adminAuth = admin.auth();
-export const adminDb = admin.firestore();
-
-let _adminStorage: typeof admin.storage extends () => infer R ? R : null = null as any;
-let _storageAvailable = false;
-
-try {
-  _adminStorage = admin.storage();
-  _storageAvailable = true;
-} catch {
-  console.warn('Firebase Storage not available. Attachment features will be disabled.');
+function assertReady(): void {
+  ensureInit();
+  if (!admin.apps.length) {
+    throw new Error('Firebase Admin not initialized');
+  }
 }
 
-export const adminStorage = _adminStorage;
-export const isStorageAvailable = () => _storageAvailable;
+export const adminAuth = new Proxy({} as admin.auth.Auth, {
+  get(_target, prop: string | symbol) {
+    assertReady();
+    const val = (admin.auth() as any)[prop];
+    return typeof val === 'function' ? val.bind(admin.auth()) : val;
+  },
+});
+
+export const adminDb = new Proxy({} as admin.firestore.Firestore, {
+  get(_target, prop: string | symbol) {
+    assertReady();
+    const db = admin.firestore();
+    const val = (db as any)[prop];
+    return typeof val === 'function' ? val.bind(db) : val;
+  },
+});
+
+export const adminStorage = new Proxy({} as admin.storage.Storage, {
+  get(_target, prop: string | symbol) {
+    assertReady();
+    const storage = admin.storage();
+    const val = (storage as any)[prop];
+    return typeof val === 'function' ? val.bind(storage) : val;
+  },
+});
+
+export function isStorageAvailable(): boolean {
+  ensureInit();
+  if (!admin.apps.length) return false;
+  try {
+    admin.storage();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const FieldValue = admin.firestore.FieldValue;
 
 export default admin;
