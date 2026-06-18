@@ -9,7 +9,9 @@ export default function PrivateLayout({
     <div className="min-h-screen bg-white">
       <nav className="bg-slate-800 text-white px-4 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Sistema Jurídico</h2>
+          <h2 className="text-lg font-semibold">
+            Sistema Jurídico
+          </h2>
           <div className="space-x-4">
             <a href="/kanban" className="hover:text-sky-400">
               Kanban
@@ -19,6 +21,9 @@ export default function PrivateLayout({
             </a>
             <a href="/archive" className="hover:text-sky-400">
               Arquivo
+            </a>
+            <a href="/" className="hover:text-sky-400">
+              Sair
             </a>
           </div>
         </div>

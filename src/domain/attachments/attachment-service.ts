@@ -1,10 +1,17 @@
 // Attachment Service (T048)
 // Manages task attachments with storage and metadata
 
-import { adminStorage, adminDb } from '@/src/firebase/admin';
+import { adminStorage, adminDb, isStorageAvailable } from '@/src/firebase/admin';
 import { recordHistoryEvent } from '@/src/domain/history/history-service';
 import { logAudit } from '@/src/domain/audit/audit-service';
 import type { SessionUser } from '@/src/types/domain';
+
+export class StorageNotAvailableError extends Error {
+  constructor() {
+    super('Firebase Storage não está configurado. Anexos de arquivos não estão disponíveis.');
+    this.name = 'StorageNotAvailableError';
+  }
+}
 
 export interface TaskAttachment {
   id: string;
@@ -131,6 +138,8 @@ export async function getDownloadUrl(
   attachmentId: string,
   expiresInHours: number = 24
 ): Promise<string> {
+  if (!isStorageAvailable()) throw new StorageNotAvailableError();
+
   const path = getAttachmentStoragePath(taskId, attachmentId);
   const bucket = adminStorage.bucket();
 
@@ -151,6 +160,8 @@ export async function deleteAttachment(
   attachmentId: string,
   deleter: SessionUser
 ): Promise<void> {
+  if (!isStorageAvailable()) throw new StorageNotAvailableError();
+
   const path = getAttachmentStoragePath(taskId, attachmentId);
 
   // Delete from storage

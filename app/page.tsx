@@ -7,7 +7,7 @@ export default function Home() {
         </h1>
         <p className="text-gray-600 mb-8">Acompanhamento de tarefas jurídicas</p>
         <a
-          href="/kanban"
+          href="/login"
           className="inline-block px-6 py-3 bg-sky-500 text-white font-medium rounded hover:bg-sky-600 transition"
         >
           Entrar no Sistema

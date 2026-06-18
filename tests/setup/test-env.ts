@@ -10,7 +10,6 @@ process.env.NEXT_PUBLIC_FIREBASE_APP_ID = 'test-app';
 vi.mock('@/src/firebase/client', () => ({
   auth: {},
   db: {},
-  storage: {},
   default: {},
 }));
 
@@ -18,5 +17,6 @@ vi.mock('@/src/firebase/admin', () => ({
   adminAuth: {},
   adminDb: {},
   adminStorage: {},
+  isStorageAvailable: () => false,
   default: {},
 }));

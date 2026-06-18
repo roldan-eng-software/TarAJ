@@ -39,6 +39,10 @@ export default function TaskAttachments({
         body: formData,
       });
 
+      if (res.status === 501) {
+        throw new Error('Armazenamento de arquivos não configurado.');
+      }
+
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || 'Failed to upload attachment');
@@ -102,6 +106,9 @@ export default function TaskAttachments({
       {error && <p className="text-red-500 text-xs">{error}</p>}
 
       <div className="border-t pt-4">
+        <p className="text-xs text-amber-600 mb-2">
+          ⚠ Upload de arquivos indisponível — Firebase Storage não configurado.
+        </p>
         <input
           ref={fileInputRef}
           type="file"
@@ -110,11 +117,10 @@ export default function TaskAttachments({
           className="hidden"
         />
         <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="w-full px-4 py-2 text-sm font-medium text-gray-700 border border-dashed border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 disabled:opacity-50 transition"
+          disabled
+          className="w-full px-4 py-2 text-sm font-medium text-gray-400 border border-dashed border-gray-200 rounded-lg cursor-not-allowed"
         >
-          {uploading ? 'Enviando...' : '+ Adicionar anexo'}
+          + Adicionar anexo (indisponível)
         </button>
       </div>
     </div>

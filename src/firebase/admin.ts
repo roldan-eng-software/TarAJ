@@ -33,7 +33,19 @@ if (!admin.apps.length) {
 
 export const adminAuth = admin.auth();
 export const adminDb = admin.firestore();
-export const adminStorage = admin.storage();
+
+let _adminStorage: typeof admin.storage extends () => infer R ? R : null = null as any;
+let _storageAvailable = false;
+
+try {
+  _adminStorage = admin.storage();
+  _storageAvailable = true;
+} catch {
+  console.warn('Firebase Storage not available. Attachment features will be disabled.');
+}
+
+export const adminStorage = _adminStorage;
+export const isStorageAvailable = () => _storageAvailable;
 export const FieldValue = admin.firestore.FieldValue;
 
 export default admin;

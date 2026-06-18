@@ -2,84 +2,84 @@
   "indexes": [
     {
       "collectionGroup": "tasks",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "archived", "order": "Ascending" },
-        { "fieldPath": "stageId", "order": "Ascending" }
+        { "fieldPath": "archived", "order": "ASCENDING" },
+        { "fieldPath": "stageId", "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "tasks",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "responsibleUserId", "order": "Ascending" },
-        { "fieldPath": "archived", "order": "Ascending" }
+        { "fieldPath": "responsibleUserId", "order": "ASCENDING" },
+        { "fieldPath": "archived", "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "tasks",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "archived", "order": "Ascending" },
-        { "fieldPath": "updatedAt", "order": "Descending" }
+        { "fieldPath": "archived", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "tasks",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "dueDate", "order": "Ascending" },
-        { "fieldPath": "archived", "order": "Ascending" }
+        { "fieldPath": "dueDate", "order": "ASCENDING" },
+        { "fieldPath": "archived", "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "alerts",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "recipientId", "order": "Ascending" },
-        { "fieldPath": "readAt", "order": "Ascending" }
+        { "fieldPath": "recipientId", "order": "ASCENDING" },
+        { "fieldPath": "readAt", "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "alerts",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "recipientId", "order": "Ascending" },
-        { "fieldPath": "createdAt", "order": "Descending" }
+        { "fieldPath": "recipientId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "alerts",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "recipientId", "order": "Ascending" },
-        { "fieldPath": "readAt", "order": "Ascending" },
-        { "fieldPath": "createdAt", "order": "Descending" }
+        { "fieldPath": "recipientId", "order": "ASCENDING" },
+        { "fieldPath": "readAt", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "auditLogs",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "resourceType", "order": "Ascending" },
-        { "fieldPath": "occurredAt", "order": "Descending" }
+        { "fieldPath": "resourceType", "order": "ASCENDING" },
+        { "fieldPath": "occurredAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "auditLogs",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "actorUserId", "order": "Ascending" },
-        { "fieldPath": "occurredAt", "order": "Descending" }
+        { "fieldPath": "actorUserId", "order": "ASCENDING" },
+        { "fieldPath": "occurredAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "tasks",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "archived", "order": "Ascending" },
-        { "fieldPath": "category", "order": "Ascending" },
-        { "fieldPath": "updatedAt", "order": "Descending" }
+        { "fieldPath": "archived", "order": "ASCENDING" },
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
       ]
     }
   ]

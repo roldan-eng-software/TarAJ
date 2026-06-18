@@ -3,10 +3,10 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createAttachmentMetadata, getTaskAttachments, deleteAttachment, getDownloadUrl } from '@/src/domain/attachments/attachment-service';
+import { createAttachmentMetadata, getTaskAttachments, deleteAttachment, getDownloadUrl, StorageNotAvailableError } from '@/src/domain/attachments/attachment-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { assertCan } from '@/src/domain/rbac/rbac-service';
-import { adminStorage } from '@/src/firebase/admin';
+import { adminStorage, isStorageAvailable } from '@/src/firebase/admin';
 import { randomUUID } from 'crypto';
 
 /**
@@ -32,13 +32,18 @@ export async function GET(
 
     const attachments = await getTaskAttachments(params.taskId);
     
-    // Add download URLs
-    const attachmentsWithUrls = await Promise.all(
-      attachments.map(async (att) => ({
-        ...att,
-        downloadUrl: await getDownloadUrl(params.taskId, att.id),
-      }))
-    );
+    // Try to add download URLs, gracefully handle if storage not available
+    let attachmentsWithUrls;
+    try {
+      attachmentsWithUrls = await Promise.all(
+        attachments.map(async (att) => ({
+          ...att,
+          downloadUrl: await getDownloadUrl(params.taskId, att.id),
+        }))
+      );
+    } catch {
+      attachmentsWithUrls = attachments;
+    }
 
     return NextResponse.json(attachmentsWithUrls);
   } catch (error) {
@@ -67,6 +72,13 @@ export async function POST(
     }
 
     assertCan(session, 'edit', 'task');
+
+    if (!isStorageAvailable()) {
+      return NextResponse.json(
+        { error: 'Armazenamento de arquivos não configurado. Anexos indisponíveis.' },
+        { status: 501 }
+      );
+    }
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
