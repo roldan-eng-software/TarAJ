@@ -2,11 +2,14 @@
 // Lazy initialization for server-side use to prevent build-time failures
 
 import * as admin from 'firebase-admin';
+import { readFileSync, existsSync } from 'fs';
 
 let _initialized = false;
+let _initError: Error | null = null;
 
 function ensureInit(): void {
   if (_initialized) return;
+  if (_initError) throw _initError;
   if (admin.apps.length) {
     _initialized = true;
     return;
@@ -14,16 +17,20 @@ function ensureInit(): void {
 
   const key = process.env.FIREBASE_ADMIN_SDK_KEY;
   if (!key) {
+    _initError = new Error('FIREBASE_ADMIN_SDK_KEY not set');
     console.warn('Firebase Admin SDK not configured: FIREBASE_ADMIN_SDK_KEY not set.');
-    return;
+    throw _initError;
   }
 
   try {
     let serviceAccount: admin.ServiceAccount;
     if (key.startsWith('{')) {
       serviceAccount = JSON.parse(key);
+    } else if (existsSync(key)) {
+      const content = readFileSync(key, 'utf-8');
+      serviceAccount = JSON.parse(content);
     } else {
-      serviceAccount = require(key) as admin.ServiceAccount;
+      throw new Error(`Cannot find service account key file: ${key}`);
     }
 
     admin.initializeApp({
@@ -31,7 +38,9 @@ function ensureInit(): void {
     });
     _initialized = true;
   } catch (error) {
-    console.warn('Firebase Admin SDK not configured.', (error as Error).message);
+    _initError = error instanceof Error ? error : new Error(String(error));
+    console.warn('Firebase Admin SDK not configured:', _initError.message);
+    throw _initError;
   }
 }
 
@@ -45,33 +54,33 @@ function assertReady(): void {
 export const adminAuth = new Proxy({} as admin.auth.Auth, {
   get(_target, prop: string | symbol) {
     assertReady();
-    const val = (admin.auth() as any)[prop];
-    return typeof val === 'function' ? val.bind(admin.auth()) : val;
+    const instance = admin.auth();
+    const val = (instance as any)[prop];
+    return typeof val === 'function' ? val.bind(instance) : val;
   },
 });
 
 export const adminDb = new Proxy({} as admin.firestore.Firestore, {
   get(_target, prop: string | symbol) {
     assertReady();
-    const db = admin.firestore();
-    const val = (db as any)[prop];
-    return typeof val === 'function' ? val.bind(db) : val;
+    const instance = admin.firestore();
+    const val = (instance as any)[prop];
+    return typeof val === 'function' ? val.bind(instance) : val;
   },
 });
 
 export const adminStorage = new Proxy({} as admin.storage.Storage, {
   get(_target, prop: string | symbol) {
     assertReady();
-    const storage = admin.storage();
-    const val = (storage as any)[prop];
-    return typeof val === 'function' ? val.bind(storage) : val;
+    const instance = admin.storage();
+    const val = (instance as any)[prop];
+    return typeof val === 'function' ? val.bind(instance) : val;
   },
 });
 
 export function isStorageAvailable(): boolean {
-  ensureInit();
-  if (!admin.apps.length) return false;
   try {
+    ensureInit();
     admin.storage();
     return true;
   } catch {
