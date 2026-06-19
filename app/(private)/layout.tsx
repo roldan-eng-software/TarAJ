@@ -80,6 +80,7 @@ export default function PrivateLayout({
     { href: '/kanban', label: 'Kanban' },
     { href: '/alerts', label: 'Alertas', showBadge: true },
     { href: '/archive', label: 'Arquivo' },
+    { href: '/settings', label: 'Config' },
     ...(isAdmin ? [{ href: '/admin/users', label: 'Admin' }] : []),
   ];
 
