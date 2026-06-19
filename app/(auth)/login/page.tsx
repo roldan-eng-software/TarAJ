@@ -27,7 +27,8 @@ export default function LoginPage() {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const token = await cred.user.getIdToken();
 
-      document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Strict`;
+      const secure = location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax${secure}`;
 
       router.push('/kanban');
     } catch (err: any) {
