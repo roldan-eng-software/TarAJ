@@ -6,7 +6,7 @@ import type { NextRequest } from 'next/server';
 import { createComment, getTaskComments } from '@/src/domain/comments/comment-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { assertCan } from '@/src/domain/rbac/rbac-service';
-import { logAudit } from '@/src/domain/audit/audit-service';
+
 
 /**
  * GET /api/tasks/[taskId]/comments

@@ -3,7 +3,7 @@
 // Only administrators can manage users (enforced by RBAC)
 
 import { adminAuth, adminDb } from '@/src/firebase/admin';
-import { logSuccess, logDenied } from '@/src/domain/audit/audit-service';
+import { logSuccess } from '@/src/domain/audit/audit-service';
 import { assertCan } from '@/src/domain/rbac/rbac-service';
 import type { User, RoleId, SessionUser } from '@/src/types/domain';
 

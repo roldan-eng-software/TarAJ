@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createTask, listTasks, searchTasks } from '@/src/domain/tasks/task-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
-import { logAudit } from '@/src/domain/audit/audit-service';
+
 import { validateTaskCreation } from '@/src/domain/tasks/task-validation';
 
 export async function GET(request: NextRequest) {

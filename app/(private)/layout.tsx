@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import type { RoleId } from '@/src/types/domain';
+import AlertBadge from '@/components/alerts/AlertInbox';
 
 export default function PrivateLayout({
   children,
@@ -15,6 +16,7 @@ export default function PrivateLayout({
   const [authenticated, setAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
   const [userRole, setUserRole] = useState<RoleId | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -43,6 +45,7 @@ export default function PrivateLayout({
 
         const session = await res.json();
         setUserRole(session.roleId || null);
+        setUserId(session.uid || null);
         setAuthenticated(true);
       } catch {
         router.push('/login');
@@ -75,7 +78,7 @@ export default function PrivateLayout({
 
   const navLinks = [
     { href: '/kanban', label: 'Kanban' },
-    { href: '/alerts', label: 'Alertas' },
+    { href: '/alerts', label: 'Alertas', showBadge: true },
     { href: '/archive', label: 'Arquivo' },
     ...(isAdmin ? [{ href: '/admin/users', label: 'Admin' }] : []),
   ];
@@ -99,13 +102,14 @@ export default function PrivateLayout({
               <a
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                className={`relative px-3 py-1.5 rounded-md text-sm font-medium transition ${
                   pathname === link.href || pathname?.startsWith(link.href + '/')
                     ? 'bg-slate-700 text-sky-400'
                     : 'hover:bg-slate-700 hover:text-sky-400'
                 }`}
               >
                 {link.label}
+                {link.showBadge && userId && <AlertBadge userId={userId} />}
               </a>
             ))}
             <button
@@ -139,13 +143,14 @@ export default function PrivateLayout({
               <a
                 key={link.href}
                 href={link.href}
-                className={`block px-3 py-2 rounded-md text-sm font-medium transition ${
+                className={`relative block px-3 py-2 rounded-md text-sm font-medium transition ${
                   pathname === link.href || pathname?.startsWith(link.href + '/')
                     ? 'bg-slate-700 text-sky-400'
                     : 'hover:bg-slate-700'
                 }`}
               >
                 {link.label}
+                {link.showBadge && userId && <AlertBadge userId={userId} />}
               </a>
             ))}
             <button

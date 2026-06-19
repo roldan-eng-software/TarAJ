@@ -4,7 +4,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
-import { getUser, updateUser, resetUserPassword } from '@/src/domain/auth/user-service';
+import { getUser, updateUser } from '@/src/domain/auth/user-service';
 
 // ── GET /api/admin/users/[userId] ───────────────────────────────
 export async function GET(

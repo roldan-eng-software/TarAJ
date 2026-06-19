@@ -9,7 +9,7 @@ import { assertCan } from '@/src/domain/rbac/rbac-service';
 import { validateTransition, getStageName } from '@/src/domain/workflow/workflow-service';
 import { recordStageChange } from '@/src/domain/history/history-service';
 import { logSuccess } from '@/src/domain/audit/audit-service';
-import { emitStageChangedAlert } from '@/src/domain/notifications/notification-events';
+import { emitStageChangedAlert, emitTaskCompletedAlert } from '@/src/domain/notifications/notification-events';
 import { adminDb } from '@/src/firebase/admin';
 import type { StageId } from '@/src/types/domain';
 
@@ -100,6 +100,10 @@ export async function POST(
       task.responsibleUserId,
       session
     );
+
+    if (targetStageId === 'concluida') {
+      await emitTaskCompletedAlert(taskId, task.title, task.responsibleUserId, session);
+    }
 
     return NextResponse.json({
       taskId,

@@ -82,7 +82,7 @@ export default function AlertsPage() {
   const handleMarkAllAsRead = async () => {
     try {
       const token = getToken();
-      const res = await fetch('/api/alerts/mark-all-read', {
+      const res = await fetch('/api/alerts', {
         method: 'PUT',
         headers: token ? { authorization: `Bearer ${token}` } : {},
       });

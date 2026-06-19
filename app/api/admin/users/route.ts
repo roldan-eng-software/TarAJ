@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { listUsers, createUserFull } from '@/src/domain/auth/user-service';
-import { logDenied } from '@/src/domain/audit/audit-service';
+
 
 // ── GET /api/admin/users ────────────────────────────────────────
 export async function GET(request: NextRequest) {

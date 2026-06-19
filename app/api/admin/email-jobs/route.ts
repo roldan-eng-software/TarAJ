@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getPendingEmails, updateEmailJobStatus, countPendingEmails } from '@/src/domain/notifications/email-queue-service';
+import {
+  getPendingEmails,
+  updateEmailJobStatus,
+  countPendingEmails,
+} from '@/src/domain/notifications/email-queue-service';
+import { sendEmail } from '@/src/domain/notifications/email-sender';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
-import { assertCan } from '@/src/domain/rbac/rbac-service';
+import { logAudit } from '@/src/domain/audit/audit-service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,8 +20,6 @@ export async function GET(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
-
-    assertCan(session, 'manage', 'user');
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -43,10 +46,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    assertCan(session, 'manage', 'user');
-
     const body = await request.json();
     const { jobId, status, error } = body;
+
+    if (body.action === 'process') {
+      const processed = await processPendingEmails(session);
+      return NextResponse.json({ processed, success: true });
+    }
 
     if (!jobId || !status) {
       return NextResponse.json({ error: 'jobId and status are required' }, { status: 400 });
@@ -56,7 +62,38 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating email job:', error);
-    return NextResponse.json({ error: 'Failed to update email job' }, { status: 500 });
+    console.error('Error processing email jobs:', error);
+    return NextResponse.json({ error: 'Failed to process email jobs' }, { status: 500 });
   }
+}
+
+async function processPendingEmails(session: { uid: string; roleId: string }): Promise<number> {
+  const pendingJobs = await getPendingEmails(10);
+  let processed = 0;
+
+  for (const job of pendingJobs) {
+    try {
+      await sendEmail({
+        to: job.recipientEmail,
+        subject: job.subject,
+        text: job.body,
+        html: job.htmlBody,
+      });
+
+      await updateEmailJobStatus(job.id, 'sent');
+      processed++;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await updateEmailJobStatus(job.id, 'failed', message);
+      console.error(`Failed to send email job ${job.id}:`, message);
+    }
+  }
+
+  if (processed > 0) {
+    await logAudit(session.uid, session.roleId, 'manage', 'task', 'email-jobs', 'success', {
+      processed,
+    });
+  }
+
+  return processed;
 }

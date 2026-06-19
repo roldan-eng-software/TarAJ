@@ -7,7 +7,7 @@ import { getTask, updateTask } from '@/src/domain/tasks/task-service';
 import { getTaskHistory } from '@/src/domain/history/history-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { assertCan } from '@/src/domain/rbac/rbac-service';
-import { logAudit } from '@/src/domain/audit/audit-service';
+
 import { validateTaskUpdate } from '@/src/domain/tasks/task-validation';
 
 export async function GET(

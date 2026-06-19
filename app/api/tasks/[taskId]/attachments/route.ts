@@ -3,7 +3,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createAttachmentMetadata, getTaskAttachments, deleteAttachment, getDownloadUrl, StorageNotAvailableError } from '@/src/domain/attachments/attachment-service';
+import { createAttachmentMetadata, getTaskAttachments, getDownloadUrl } from '@/src/domain/attachments/attachment-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { assertCan } from '@/src/domain/rbac/rbac-service';
 import { adminStorage, isStorageAvailable } from '@/src/firebase/admin';
