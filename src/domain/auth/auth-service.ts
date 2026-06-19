@@ -1,19 +1,11 @@
-// Authentication Service
+// Authentication Service (Server-side only)
 // Session verification and internal profile loading
 
-import { auth } from '@/src/firebase/client';
 import { adminAuth, adminDb } from '@/src/firebase/admin';
 import type { SessionUser, User } from '@/src/types/domain';
 
 /**
- * Get current Firebase user from client-side auth
- */
-export async function getCurrentFirebaseUser() {
-  return auth.currentUser;
-}
-
-/**
- * Get session from cookies or client auth
+ * Get session from token
  * Auto-creates user profile if it doesn't exist yet (first-login bootstrap)
  */
 export async function getSessionUser(token: string): Promise<SessionUser | null> {
@@ -62,13 +54,6 @@ export async function getSessionUser(token: string): Promise<SessionUser | null>
     console.error('Session verification failed:', error);
     return null;
   }
-}
-
-/**
- * Sign out current user
- */
-export async function signOut(): Promise<void> {
-  return auth.signOut();
 }
 
 /**
