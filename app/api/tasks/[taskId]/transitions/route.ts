@@ -6,7 +6,7 @@ import type { NextRequest } from 'next/server';
 import { getTask } from '@/src/domain/tasks/task-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { assertCan } from '@/src/domain/rbac/rbac-service';
-import { validateTransition, getStageName } from '@/src/domain/workflow/workflow-service';
+import { validateTransition } from '@/src/domain/workflow/workflow-service';
 import { recordStageChange } from '@/src/domain/history/history-service';
 import { logSuccess } from '@/src/domain/audit/audit-service';
 import { emitStageChangedAlert, emitTaskCompletedAlert } from '@/src/domain/notifications/notification-events';
@@ -75,8 +75,6 @@ export async function POST(
 
     await adminDb.collection('tasks').doc(taskId).update(updates);
 
-    const fromStageName = getStageName(task.stageId);
-    const toStageName = getStageName(targetStageId);
     await recordStageChange(
       taskId,
       session.uid,
@@ -95,8 +93,8 @@ export async function POST(
     await emitStageChangedAlert(
       taskId,
       task.title,
-      fromStageName,
-      toStageName,
+      task.stageId,
+      targetStageId,
       task.responsibleUserId,
       session
     );

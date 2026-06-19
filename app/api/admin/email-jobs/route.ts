@@ -4,8 +4,8 @@ import {
   getPendingEmails,
   updateEmailJobStatus,
   countPendingEmails,
+  processPendingEmails,
 } from '@/src/domain/notifications/email-queue-service';
-import { sendEmail } from '@/src/domain/notifications/email-sender';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { logAudit } from '@/src/domain/audit/audit-service';
 
@@ -50,7 +50,12 @@ export async function POST(request: NextRequest) {
     const { jobId, status, error } = body;
 
     if (body.action === 'process') {
-      const processed = await processPendingEmails(session);
+      const processed = await processPendingEmails(10);
+      if (processed > 0) {
+        await logAudit(session.uid, session.roleId, 'manage', 'task', 'email-jobs', 'success', {
+          processed,
+        });
+      }
       return NextResponse.json({ processed, success: true });
     }
 
@@ -65,35 +70,4 @@ export async function POST(request: NextRequest) {
     console.error('Error processing email jobs:', error);
     return NextResponse.json({ error: 'Failed to process email jobs' }, { status: 500 });
   }
-}
-
-async function processPendingEmails(session: { uid: string; roleId: string }): Promise<number> {
-  const pendingJobs = await getPendingEmails(10);
-  let processed = 0;
-
-  for (const job of pendingJobs) {
-    try {
-      await sendEmail({
-        to: job.recipientEmail,
-        subject: job.subject,
-        text: job.body,
-        html: job.htmlBody,
-      });
-
-      await updateEmailJobStatus(job.id, 'sent');
-      processed++;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      await updateEmailJobStatus(job.id, 'failed', message);
-      console.error(`Failed to send email job ${job.id}:`, message);
-    }
-  }
-
-  if (processed > 0) {
-    await logAudit(session.uid, session.roleId, 'manage', 'task', 'email-jobs', 'success', {
-      processed,
-    });
-  }
-
-  return processed;
 }

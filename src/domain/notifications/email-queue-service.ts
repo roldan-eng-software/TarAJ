@@ -2,6 +2,7 @@
 // Manages email scheduling and provider abstraction
 
 import { adminDb, FieldValue } from '@/src/firebase/admin';
+import { sendEmail } from '@/src/domain/notifications/email-sender';
 import type { EmailJob } from '@/src/types/domain';
 
 export type EmailJobStatus = 'pending' | 'sent' | 'failed' | 'bounced';
@@ -139,4 +140,48 @@ export async function cleanupOldEmailJobs(retentionDays: number = 30): Promise<n
 
   await batch.commit();
   return oldJobs.size;
+}
+
+/**
+ * Process pending email jobs (up to `limit`)
+ * Returns the number of successfully sent emails
+ */
+export async function processPendingEmails(limit: number = 10): Promise<number> {
+  const pendingJobs = await getPendingEmails(limit);
+  let processed = 0;
+
+  for (const job of pendingJobs) {
+    try {
+      await sendEmail({
+        to: job.recipientEmail,
+        subject: job.subject,
+        text: job.body,
+        html: job.htmlBody,
+      });
+
+      await updateEmailJobStatus(job.id, 'sent');
+      processed++;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await updateEmailJobStatus(job.id, 'failed', message);
+      console.error(`Failed to send email job ${job.id}:`, message);
+    }
+  }
+
+  return processed;
+}
+
+/**
+ * Process ALL pending email jobs (calls processPendingEmails in batches)
+ */
+export async function processAllPendingEmails(): Promise<number> {
+  let total = 0;
+  let batch: number;
+
+  do {
+    batch = await processPendingEmails(50);
+    total += batch;
+  } while (batch > 0);
+
+  return total;
 }
