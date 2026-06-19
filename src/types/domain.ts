@@ -15,7 +15,7 @@ export type PermissionAction =
   | 'restore'
   | 'manage';
 
-export type ResourceType = 'task' | 'user' | 'audit' | 'attachment' | 'alert' | 'comment';
+export type ResourceType = 'task' | 'user' | 'audit' | 'attachment' | 'alert' | 'alertconfig' | 'comment';
 
 export interface Permission {
   role: RoleId;
@@ -205,6 +205,19 @@ export interface TransitionInput {
   taskId: string;
   toStageId: StageId;
   comment?: string;
+}
+
+export interface StageAlertConfig {
+  id: string;
+  stageId: StageId;
+  eventType: AlertEventType;
+  enabled: boolean;
+  notifyResponsible: boolean;
+  notifyCreator: boolean;
+  notifyParticipants: boolean;
+  notifyRoles: RoleId[];
+  updatedAt: Date;
+  updatedBy: string;
 }
 
 export interface EmailJob {

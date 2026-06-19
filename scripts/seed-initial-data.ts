@@ -2,6 +2,7 @@
 // Run with: npm run seed
 
 import { adminDb } from '@/src/firebase/admin';
+import { seedDefaultAlertConfigs } from '@/src/domain/notifications/alert-config-service';
 
 const INITIAL_ROLES = [
   {
@@ -98,6 +99,10 @@ async function seedDatabase() {
       await adminDb.collection('workflowStages').doc(stage.id).set(stage);
       console.log(`✓ Created stage: ${stage.name}`);
     }
+
+    // Seed default alert configs
+    const alertConfigsSeeded = await seedDefaultAlertConfigs('seed-script');
+    console.log(`✓ Created ${alertConfigsSeeded} default alert configurations`);
 
     console.log('Database seeding completed successfully!');
   } catch (error) {

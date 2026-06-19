@@ -1,8 +1,9 @@
 import { createAlert } from '@/src/domain/notifications/notification-service';
 import { queueEmail } from '@/src/domain/notifications/email-queue-service';
+import { getRecipientsForEvent } from '@/src/domain/notifications/alert-config-service';
 import { isBackwardTransition, getStageName } from '@/src/domain/workflow/workflow-service';
 import { adminDb } from '@/src/firebase/admin';
-import type { SessionUser, StageId } from '@/src/types/domain';
+import type { SessionUser, Task, StageId, AlertEventType } from '@/src/types/domain';
 
 async function resolveRecipientInfo(
   userId: string
@@ -18,207 +19,169 @@ async function resolveRecipientInfo(
   }
 }
 
+async function notifyRecipients(
+  task: Task,
+  eventType: AlertEventType,
+  configStageId: StageId,
+  message: string,
+  emailSubject: string,
+  emailBody: string,
+  emailHtml: string,
+  actor: SessionUser,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  const recipients = await getRecipientsForEvent(configStageId, eventType, task);
+
+  for (const { userId } of recipients) {
+    await createAlert(
+      eventType,
+      task.id,
+      userId,
+      actor.displayName,
+      message,
+      { ...metadata, taskId: task.id }
+    );
+
+    const info = await resolveRecipientInfo(userId);
+    if (info) {
+      await queueEmail(
+        info.email,
+        info.displayName,
+        emailSubject,
+        emailBody,
+        emailHtml,
+        { ...metadata, taskId: task.id, eventType }
+      );
+    }
+  }
+}
+
 export async function emitTaskCreatedAlert(
-  taskId: string,
-  taskTitle: string,
-  responsibleUserId: string,
+  task: Task,
   actor: SessionUser
 ): Promise<void> {
-  await createAlert(
+  await notifyRecipients(
+    task,
     'task_created',
-    taskId,
-    responsibleUserId,
-    actor.displayName,
-    `Tarefa "${taskTitle}" foi criada`,
-    { taskId, createdBy: actor.uid }
+    task.stageId,
+    `Tarefa "${task.title}" foi criada`,
+    `[TarAJ] Nova tarefa: ${task.title}`,
+    `A tarefa "${task.title}" foi criada por ${actor.displayName}.`,
+    `<p>A tarefa <strong>"${task.title}"</strong> foi criada por ${actor.displayName}.</p>`,
+    actor,
+    { createdBy: actor.uid }
   );
-
-  const recipient = await resolveRecipientInfo(responsibleUserId);
-  if (recipient) {
-    await queueEmail(
-      recipient.email,
-      recipient.displayName,
-      `[TarAJ] Nova tarefa: ${taskTitle}`,
-      `A tarefa "${taskTitle}" foi criada por ${actor.displayName}.`,
-      `<p>A tarefa <strong>"${taskTitle}"</strong> foi criada por ${actor.displayName}.</p>`,
-      { taskId, eventType: 'task_created' }
-    );
-  }
 }
 
 export async function emitResponsibleChangedAlert(
-  taskId: string,
-  taskTitle: string,
-  newResponsibleId: string,
+  task: Task,
   actor: SessionUser
 ): Promise<void> {
-  await createAlert(
+  await notifyRecipients(
+    task,
     'responsible_changed',
-    taskId,
-    newResponsibleId,
-    actor.displayName,
-    `Você foi designado responsável pela tarefa "${taskTitle}"`,
-    { taskId, changedBy: actor.uid }
+    task.stageId,
+    `Você foi designado responsável pela tarefa "${task.title}"`,
+    `[TarAJ] Responsável alterado: ${task.title}`,
+    `Você foi designado responsável pela tarefa "${task.title}" por ${actor.displayName}.`,
+    `<p>Você foi designado responsável pela tarefa <strong>"${task.title}"</strong> por ${actor.displayName}.</p>`,
+    actor,
+    { changedBy: actor.uid }
   );
-
-  const recipient = await resolveRecipientInfo(newResponsibleId);
-  if (recipient) {
-    await queueEmail(
-      recipient.email,
-      recipient.displayName,
-      `[TarAJ] Responsável alterado: ${taskTitle}`,
-      `Você foi designado responsável pela tarefa "${taskTitle}" por ${actor.displayName}.`,
-      `<p>Você foi designado responsável pela tarefa <strong>"${taskTitle}"</strong> por ${actor.displayName}.</p>`,
-      { taskId, eventType: 'responsible_changed' }
-    );
-  }
 }
 
 export async function emitStageChangedAlert(
-  taskId: string,
-  taskTitle: string,
+  task: Task,
   fromStageId: StageId,
   toStageId: StageId,
-  responsibleUserId: string,
   actor: SessionUser
 ): Promise<void> {
   const backward = isBackwardTransition(fromStageId, toStageId);
-  const eventType = backward ? 'stage_moved_backward' : 'stage_changed';
+  const eventType: AlertEventType = backward ? 'stage_moved_backward' : 'stage_changed';
   const toStageName = getStageName(toStageId);
   const message = backward
-    ? `Tarefa "${taskTitle}" retornou para "${toStageName}"`
-    : `Tarefa "${taskTitle}" mudou para "${toStageName}"`;
+    ? `Tarefa "${task.title}" retornou para "${toStageName}"`
+    : `Tarefa "${task.title}" mudou para "${toStageName}"`;
 
-  await createAlert(
+  await notifyRecipients(
+    task,
     eventType,
-    taskId,
-    responsibleUserId,
-    actor.displayName,
+    toStageId,
     message,
-    { taskId, fromStage: fromStageId, toStage: toStageId }
+    `[TarAJ] Estágio alterado: ${task.title}`,
+    `${message} por ${actor.displayName}.`,
+    `<p>${message} por ${actor.displayName}.</p>`,
+    actor,
+    { fromStage: fromStageId, toStage: toStageId }
   );
-
-  const recipient = await resolveRecipientInfo(responsibleUserId);
-  if (recipient) {
-    await queueEmail(
-      recipient.email,
-      recipient.displayName,
-      `[TarAJ] Estágio alterado: ${taskTitle}`,
-      `${message} por ${actor.displayName}.`,
-      `<p>${message} por ${actor.displayName}.</p>`,
-      { taskId, fromStage: fromStageId, toStage: toStageId, eventType }
-    );
-  }
 }
 
 export async function emitMentionAlert(
-  taskId: string,
-  taskTitle: string,
+  task: Task,
   mentionedUserId: string,
   actor: SessionUser
 ): Promise<void> {
-  await createAlert(
+  await notifyRecipients(
+    task,
     'mentioned_in_comment',
-    taskId,
-    mentionedUserId,
-    actor.displayName,
-    `Você foi mencionado na tarefa "${taskTitle}"`,
-    { taskId, mentionedBy: actor.uid }
+    task.stageId,
+    `Você foi mencionado na tarefa "${task.title}"`,
+    `[TarAJ] Menção: ${task.title}`,
+    `Você foi mencionado por ${actor.displayName} na tarefa "${task.title}".`,
+    `<p>Você foi mencionado por ${actor.displayName} na tarefa <strong>"${task.title}"</strong>.</p>`,
+    actor,
+    { mentionedBy: actor.uid }
   );
-
-  const recipient = await resolveRecipientInfo(mentionedUserId);
-  if (recipient) {
-    await queueEmail(
-      recipient.email,
-      recipient.displayName,
-      `[TarAJ] Menção: ${taskTitle}`,
-      `Você foi mencionado por ${actor.displayName} na tarefa "${taskTitle}".`,
-      `<p>Você foi mencionado por ${actor.displayName} na tarefa <strong>"${taskTitle}"</strong>.</p>`,
-      { taskId, eventType: 'mentioned_in_comment' }
-    );
-  }
 }
 
 export async function emitTaskCompletedAlert(
-  taskId: string,
-  taskTitle: string,
-  responsibleUserId: string,
+  task: Task,
   actor: SessionUser
 ): Promise<void> {
-  await createAlert(
+  await notifyRecipients(
+    task,
     'task_completed',
-    taskId,
-    responsibleUserId,
-    actor.displayName,
-    `Tarefa "${taskTitle}" foi concluída`,
-    { taskId, completedBy: actor.uid }
+    'concluida',
+    `Tarefa "${task.title}" foi concluída`,
+    `[TarAJ] Tarefa concluída: ${task.title}`,
+    `A tarefa "${task.title}" foi concluída por ${actor.displayName}.`,
+    `<p>A tarefa <strong>"${task.title}"</strong> foi concluída por ${actor.displayName}.</p>`,
+    actor,
+    { completedBy: actor.uid }
   );
-
-  const recipient = await resolveRecipientInfo(responsibleUserId);
-  if (recipient) {
-    await queueEmail(
-      recipient.email,
-      recipient.displayName,
-      `[TarAJ] Tarefa concluída: ${taskTitle}`,
-      `A tarefa "${taskTitle}" foi concluída por ${actor.displayName}.`,
-      `<p>A tarefa <strong>"${taskTitle}"</strong> foi concluída por ${actor.displayName}.</p>`,
-      { taskId, eventType: 'task_completed' }
-    );
-  }
 }
 
 export async function emitTaskArchivedAlert(
-  taskId: string,
-  taskTitle: string,
-  responsibleUserId: string,
+  task: Task,
   actor: SessionUser
 ): Promise<void> {
-  await createAlert(
+  await notifyRecipients(
+    task,
     'task_archived',
-    taskId,
-    responsibleUserId,
-    actor.displayName,
-    `Tarefa "${taskTitle}" foi arquivada`,
-    { taskId, archivedBy: actor.uid }
+    'arquivada',
+    `Tarefa "${task.title}" foi arquivada`,
+    `[TarAJ] Tarefa arquivada: ${task.title}`,
+    `A tarefa "${task.title}" foi arquivada por ${actor.displayName}.`,
+    `<p>A tarefa <strong>"${task.title}"</strong> foi arquivada por ${actor.displayName}.</p>`,
+    actor,
+    { archivedBy: actor.uid }
   );
-
-  const recipient = await resolveRecipientInfo(responsibleUserId);
-  if (recipient) {
-    await queueEmail(
-      recipient.email,
-      recipient.displayName,
-      `[TarAJ] Tarefa arquivada: ${taskTitle}`,
-      `A tarefa "${taskTitle}" foi arquivada por ${actor.displayName}.`,
-      `<p>A tarefa <strong>"${taskTitle}"</strong> foi arquivada por ${actor.displayName}.</p>`,
-      { taskId, eventType: 'task_archived' }
-    );
-  }
 }
 
 export async function emitTaskRestoredAlert(
-  taskId: string,
-  taskTitle: string,
-  responsibleUserId: string,
-  actor: SessionUser
+  task: Task,
+  actor: SessionUser,
+  targetStageId: StageId
 ): Promise<void> {
-  await createAlert(
+  await notifyRecipients(
+    task,
     'task_restored',
-    taskId,
-    responsibleUserId,
-    actor.displayName,
-    `Tarefa "${taskTitle}" foi restaurada`,
-    { taskId, restoredBy: actor.uid }
+    targetStageId,
+    `Tarefa "${task.title}" foi restaurada`,
+    `[TarAJ] Tarefa restaurada: ${task.title}`,
+    `A tarefa "${task.title}" foi restaurada por ${actor.displayName}.`,
+    `<p>A tarefa <strong>"${task.title}"</strong> foi restaurada por ${actor.displayName}.</p>`,
+    actor,
+    { restoredBy: actor.uid, targetStage: targetStageId }
   );
-
-  const recipient = await resolveRecipientInfo(responsibleUserId);
-  if (recipient) {
-    await queueEmail(
-      recipient.email,
-      recipient.displayName,
-      `[TarAJ] Tarefa restaurada: ${taskTitle}`,
-      `A tarefa "${taskTitle}" foi restaurada por ${actor.displayName}.`,
-      `<p>A tarefa <strong>"${taskTitle}"</strong> foi restaurada por ${actor.displayName}.</p>`,
-      { taskId, eventType: 'task_restored' }
-    );
-  }
 }

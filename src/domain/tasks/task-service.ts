@@ -53,7 +53,7 @@ export async function createTask(
   });
 
   // Emit notification for responsible user
-  await emitTaskCreatedAlert(task.id, task.title, task.responsibleUserId, creator);
+  await emitTaskCreatedAlert(task, creator);
 
   return task;
 }
@@ -184,7 +184,7 @@ export async function updateTask(
       existing.responsibleUserId,
       input.responsibleUserId
     );
-    await emitResponsibleChangedAlert(taskId, existing.title, input.responsibleUserId, updater);
+    await emitResponsibleChangedAlert(updated, updater);
   }
 
   return updated;

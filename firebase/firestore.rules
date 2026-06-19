@@ -80,6 +80,12 @@ service cloud.firestore {
       allow write: if false; // Managed by server functions
     }
 
+    // Stage alert config: admin read, server-side write
+    match /stageAlertConfig/{configId} {
+      allow read: if request.auth != null && hasRole(request.auth.uid, ['administrator']);
+      allow write: if false; // Managed by server functions
+    }
+
     // Helper functions
     function isArchivedWriteOnly() {
       return resource.data.archived == true && request.resource.data.archived == true;

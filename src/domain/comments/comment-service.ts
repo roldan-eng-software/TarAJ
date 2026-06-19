@@ -5,7 +5,7 @@ import { adminDb } from '@/src/firebase/admin';
 import { recordHistoryEvent } from '@/src/domain/history/history-service';
 import { logAudit } from '@/src/domain/audit/audit-service';
 import { emitMentionAlert } from '@/src/domain/notifications/notification-events';
-import type { SessionUser } from '@/src/types/domain';
+import type { SessionUser, Task } from '@/src/types/domain';
 
 export interface TaskComment {
   id: string;
@@ -80,11 +80,11 @@ export async function createComment(
 
   // Fire mention alerts for each mentioned user
   const taskSnap = await adminDb.collection('tasks').doc(taskId).get();
-  const taskTitle = taskSnap.data()?.title || 'tarefa';
+  const task = { id: taskId, ...taskSnap.data(), createdAt: new Date(), updatedAt: new Date() } as Task;
 
   for (const mentionedUserId of mentions) {
     if (mentionedUserId !== author.uid) {
-      await emitMentionAlert(taskId, taskTitle, mentionedUserId, author);
+      await emitMentionAlert(task, mentionedUserId, author);
     }
   }
 

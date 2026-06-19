@@ -1,7 +1,7 @@
 import { recordHistoryEvent } from '@/src/domain/history/history-service';
 import { logAudit } from '@/src/domain/audit/audit-service';
 import { emitTaskArchivedAlert, emitTaskRestoredAlert } from '@/src/domain/notifications/notification-events';
-import type { SessionUser, Task } from '@/src/types/domain';
+import type { SessionUser, Task, StageId } from '@/src/types/domain';
 
 export async function onTaskArchived(
   task: Task,
@@ -22,7 +22,7 @@ export async function onTaskArchived(
     { previousStage: task.stageId, archivedAt: new Date().toISOString() }
   );
 
-  await emitTaskArchivedAlert(task.id, task.title, task.responsibleUserId, actor);
+  await emitTaskArchivedAlert(task, actor);
 }
 
 export async function onTaskRestored(
@@ -45,5 +45,5 @@ export async function onTaskRestored(
     { targetStage, restoredAt: new Date().toISOString() }
   );
 
-  await emitTaskRestoredAlert(task.id, task.title, task.responsibleUserId, actor);
+  await emitTaskRestoredAlert(task, actor, targetStage as StageId);
 }

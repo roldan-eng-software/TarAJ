@@ -91,16 +91,14 @@ export async function POST(
     });
 
     await emitStageChangedAlert(
-      taskId,
-      task.title,
+      task,
       task.stageId,
       targetStageId,
-      task.responsibleUserId,
       session
     );
 
     if (targetStageId === 'concluida') {
-      await emitTaskCompletedAlert(taskId, task.title, task.responsibleUserId, session);
+      await emitTaskCompletedAlert(task, session);
     }
 
     return NextResponse.json({
