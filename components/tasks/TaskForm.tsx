@@ -28,7 +28,7 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
   const [responsibleUserId, setResponsibleUserId] = useState(initialData?.responsibleUserId || '');
   const [dueDate, setDueDate] = useState(initialData?.dueDate || '');
   const [confidentialityLevel, setConfidentialityLevel] = useState(initialData?.confidentialityLevel || 'interno');
-  const [users, setUsers] = useState<{ id: string; displayName: string }[]>([]);
+  const [users, setUsers] = useState<{ id: string; displayName: string; email: string }[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
 
   useEffect(() => {
