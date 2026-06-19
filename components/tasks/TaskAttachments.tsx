@@ -39,10 +39,6 @@ export default function TaskAttachments({
         body: formData,
       });
 
-      if (res.status === 501) {
-        throw new Error('Armazenamento de arquivos não configurado.');
-      }
-
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || 'Failed to upload attachment');
@@ -70,6 +66,10 @@ export default function TaskAttachments({
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
+  const getDownloadLink = (attachment: TaskAttachment): string | undefined => {
+    return attachment.blobUrl;
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -89,10 +89,11 @@ export default function TaskAttachments({
                   {attachment.createdAt?.toLocaleString('pt-BR')}
                 </p>
               </div>
-              {attachment.downloadUrl && (
+              {getDownloadLink(attachment) && (
                 <a
-                  href={attachment.downloadUrl}
-                  download={attachment.fileName}
+                  href={getDownloadLink(attachment)}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="ml-4 px-3 py-1 text-sm text-sky-600 hover:text-sky-700 shrink-0"
                 >
                   Download
@@ -106,9 +107,6 @@ export default function TaskAttachments({
       {error && <p className="text-red-500 text-xs">{error}</p>}
 
       <div className="border-t pt-4">
-        <p className="text-xs text-amber-600 mb-2">
-          ⚠ Upload de arquivos indisponível — Firebase Storage não configurado.
-        </p>
         <input
           ref={fileInputRef}
           type="file"
@@ -117,10 +115,11 @@ export default function TaskAttachments({
           className="hidden"
         />
         <button
-          disabled
-          className="w-full px-4 py-2 text-sm font-medium text-gray-400 border border-dashed border-gray-200 rounded-lg cursor-not-allowed"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="w-full px-4 py-2 text-sm font-medium text-sky-600 border border-dashed border-sky-200 rounded-lg hover:bg-sky-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
-          + Adicionar anexo (indisponível)
+          {uploading ? 'Enviando...' : '+ Adicionar anexo'}
         </button>
       </div>
     </div>

@@ -1,18 +1,10 @@
-// Attachments Route Handler (T050)
-// API endpoints for uploading and managing task attachments
-
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createAttachmentMetadata, getTaskAttachments, getDownloadUrl } from '@/src/domain/attachments/attachment-service';
+import { uploadAttachment, getTaskAttachments } from '@/src/domain/attachments/attachment-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { assertCan } from '@/src/domain/rbac/rbac-service';
-import { adminStorage, isStorageAvailable } from '@/src/firebase/admin';
 import { randomUUID } from 'crypto';
 
-/**
- * GET /api/tasks/[taskId]/attachments
- * List all attachments for a task
- */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> }
@@ -32,31 +24,14 @@ export async function GET(
     assertCan(session, 'view', 'task');
 
     const attachments = await getTaskAttachments(taskId);
-    
-    // Try to add download URLs, gracefully handle if storage not available
-    let attachmentsWithUrls;
-    try {
-      attachmentsWithUrls = await Promise.all(
-        attachments.map(async (att) => ({
-          ...att,
-          downloadUrl: await getDownloadUrl(taskId, att.id),
-        }))
-      );
-    } catch {
-      attachmentsWithUrls = attachments;
-    }
 
-    return NextResponse.json(attachmentsWithUrls);
+    return NextResponse.json(attachments);
   } catch (error) {
     console.error('Error fetching attachments:', error);
     return NextResponse.json({ error: 'Failed to fetch attachments' }, { status: 500 });
   }
 }
 
-/**
- * POST /api/tasks/[taskId]/attachments
- * Upload a new attachment to a task
- */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> }
@@ -75,13 +50,6 @@ export async function POST(
 
     assertCan(session, 'edit', 'task');
 
-    if (!isStorageAvailable()) {
-      return NextResponse.json(
-        { error: 'Armazenamento de arquivos não configurado. Anexos indisponíveis.' },
-        { status: 501 }
-      );
-    }
-
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -90,31 +58,18 @@ export async function POST(
     }
 
     const attachmentId = randomUUID();
-    const storagePath = `tasks/${taskId}/attachments/${attachmentId}`;
-    
-    // Upload to Cloud Storage
-    const buffer = await file.arrayBuffer();
-    await adminStorage.bucket().file(storagePath).save(Buffer.from(buffer), {
-      metadata: {
-        contentType: file.type,
-      },
-    });
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-    const attachment = await createAttachmentMetadata(
+    const attachment = await uploadAttachment(
       taskId,
       attachmentId,
       file.name,
-      file.size,
+      buffer,
       file.type,
       session
     );
 
-    const downloadUrl = await getDownloadUrl(taskId, attachmentId);
-
-    return NextResponse.json(
-      { ...attachment, downloadUrl },
-      { status: 201 }
-    );
+    return NextResponse.json(attachment, { status: 201 });
   } catch (error) {
     console.error('Error uploading attachment:', error);
     if ((error as any).message?.includes('permission')) {
@@ -123,5 +78,3 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to upload attachment' }, { status: 500 });
   }
 }
-
-
