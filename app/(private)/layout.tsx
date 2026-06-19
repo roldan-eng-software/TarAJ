@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { RoleId } from '@/src/types/domain';
 import AlertBadge from '@/components/alerts/AlertInbox';
@@ -100,7 +101,7 @@ export default function PrivateLayout({
           {/* Desktop nav */}
           <div className="hidden md:flex items-center space-x-1">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 className={`relative px-3 py-1.5 rounded-md text-sm font-medium transition ${
@@ -111,7 +112,7 @@ export default function PrivateLayout({
               >
                 {link.label}
                 {link.showBadge && userId && <AlertBadge userId={userId} />}
-              </a>
+              </Link>
             ))}
             <button
               onClick={handleLogout}
@@ -141,7 +142,7 @@ export default function PrivateLayout({
         {mobileMenuOpen && (
           <div className="md:hidden mt-2 pt-2 border-t border-slate-700 space-y-1">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 className={`relative block px-3 py-2 rounded-md text-sm font-medium transition ${
@@ -152,7 +153,7 @@ export default function PrivateLayout({
               >
                 {link.label}
                 {link.showBadge && userId && <AlertBadge userId={userId} />}
-              </a>
+              </Link>
             ))}
             <button
               onClick={handleLogout}

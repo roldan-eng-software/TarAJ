@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { auth } from '@/src/firebase/client';
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import { onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState('');
+  const [checking, setChecking] = useState(true);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -15,13 +16,24 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    setUserEmail(user.email || '');
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+      setUserEmail(user.email || '');
+      setChecking(false);
+    });
+    return unsubscribe;
   }, [router]);
+
+  if (checking) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <p className="text-gray-500">Verificando autenticação...</p>
+      </div>
+    );
+  }
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
