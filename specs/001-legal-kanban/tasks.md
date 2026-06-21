@@ -8,6 +8,8 @@
 
 **Organization**: Tasks are ordered for incremental MVP delivery and grouped as requested: Setup, Tests, Core, Integration and Polish. Story labels map to the specification user stories: US1 Kanban task management, US2 history/comments/attachments, US3 alerts, US4 archive.
 
+**Status Legend**: `[x]` = implemented, `[~]` = partial, `[ ]` = pending
+
 ## Format: `[ID] [P?] [Story?] Description`
 
 - **[P]**: Can run in parallel after its dependencies are complete
@@ -35,18 +37,18 @@
 
 **Purpose**: Establish executable acceptance coverage before Core implementation.
 
-- [x] T013 [P] Create test runner configuration for unit, contract and integration tests in `package.json` and `tests/setup/test-env.ts`
+- [~] T013 [P] Create test runner configuration for unit, contract and integration tests in `package.json` and `tests/setup/test-env.ts` (test-env.ts missing)
 - [x] T014 [P] [US1] Add RBAC unit tests for administrator, coordinator, collaborator and internal reader permissions in `tests/unit/rbac.test.ts`
 - [x] T015 [P] [US1] Add workflow transition unit tests for allowed, invalid and backward transitions in `tests/unit/workflow.test.ts`
-- [x] T016 [P] [US1] Add task Route Handler contract tests for create, list, detail, update and transition endpoints in `tests/contract/tasks.contract.test.ts`
-- [x] T017 [P] [US1] Add Kanban integration test for create task, move stage and denied unauthorized movement in `tests/integration/kanban-flow.test.ts`
-- [x] T018 [P] [US2] Add history/comment/attachment service tests for append-only history and scoped attachment access in `tests/unit/history-comments-attachments.test.ts`
-- [x] T019 [P] [US2] Add comment and attachment Route Handler contract tests in `tests/contract/comments-attachments.contract.test.ts`
+- [~] T016 [P] [US1] Add task Route Handler contract tests for create, list, detail, update and transition endpoints in `tests/contract/tasks.contract.test.ts` (stub — all assertions placeholders)
+- [~] T017 [P] [US1] Add Kanban integration test for create task, move stage and denied unauthorized movement in `tests/integration/kanban-flow.test.ts` (stub)
+- [~] T018 [P] [US2] Add history/comment/attachment service tests for append-only history and scoped attachment access in `tests/unit/history-comments-attachments.test.ts` (stub)
+- [~] T019 [P] [US2] Add comment and attachment Route Handler contract tests in `tests/contract/comments-attachments.contract.test.ts` (stub)
 - [x] T020 [P] [US3] Add notification and due-date service tests for deduplication, upcoming and overdue alerts in `tests/unit/notifications.test.ts`
-- [x] T021 [P] [US3] Add alert Route Handler contract tests for inbox and mark-read behavior in `tests/contract/alerts.contract.test.ts`
-- [x] T022 [P] [US4] Add archive workflow tests for completed-only archive, restore and archived lookup in `tests/unit/archive.test.ts`
-- [x] T023 [P] Add Firestore and Storage security rules smoke tests in `tests/integration/firebase-rules.test.ts`
-- [x] T024 [P] Add quickstart end-to-end scenario checklist test scaffold in `tests/integration/quickstart-validation.test.ts`
+- [~] T021 [P] [US3] Add alert Route Handler contract tests for inbox and mark-read behavior in `tests/contract/alerts.contract.test.ts` (mostly stubs)
+- [~] T022 [P] [US4] Add archive workflow tests for completed-only archive, restore and archived lookup in `tests/unit/archive.test.ts` (stub)
+- [~] T023 [P] Add Firestore and Storage security rules smoke tests in `tests/integration/firebase-rules.test.ts` (stub)
+- [~] T024 [P] Add quickstart end-to-end scenario checklist test scaffold in `tests/integration/quickstart-validation.test.ts` (stub)
 
 ## Phase 3: Core
 
@@ -64,14 +66,14 @@
 - [x] T028 [US1] Implement protected route shell and private navigation in `app/(private)/layout.tsx`
 - [x] T029 [US1] Implement login screen and auth state handoff in `app/(auth)/login/page.tsx`
 - [x] T030 [US1] Implement `/api/auth/session` Route Handler in `app/api/auth/session/route.ts`
-- [x] T031 [US1] Implement Firestore converters for users, roles, stages and tasks in `src/firebase/converters/core.ts`
+- [ ] T031 [US1] Implement Firestore converters for users, roles, stages and tasks in `src/firebase/converters/core.ts`
 - [x] T032 [US1] Implement task validation and reference-code/search normalization in `src/domain/tasks/task-validation.ts`
 - [x] T033 [US1] Implement history append service for task creation and movement events in `src/domain/history/history-service.ts`
 - [x] T034 [US1] Implement audit service for success, denied and failed critical events in `src/domain/audit/audit-service.ts`
 - [x] T035 [US1] Implement task create/list/detail/update service with RBAC and audit side effects in `src/domain/tasks/task-service.ts`
 - [x] T036 [US1] Implement centralized workflow transition service with allowed transitions and backward detection in `src/domain/workflow/workflow-service.ts`
-- [x] T037 [US1] Implement task Route Handlers for list/create/detail/update in `app/api/tasks/route.ts` and `app/api/tasks/[taskId]/route.ts`
-- [x] T038 [US1] Implement transition Route Handler in `app/api/tasks/[taskId]/transitions/route.ts`
+- [~] T037 [US1] Implement task Route Handlers for list/create/detail/update in `app/api/tasks/route.ts` and `app/api/tasks/[taskId]/route.ts` (only `tasks/route.ts` exists; `[taskId]/route.ts` missing)
+- [ ] T038 [US1] Implement transition Route Handler in `app/api/tasks/[taskId]/transitions/route.ts`
 - [x] T039 [US1] Implement Kanban board UI with responsive columns in `components/kanban/KanbanBoard.tsx`
 - [x] T040 [US1] Implement task card component with priority, due date and responsible summary in `components/kanban/TaskCard.tsx`
 - [x] T041 [US1] Implement task create/edit form with sober Tailwind styling in `components/tasks/TaskForm.tsx`
@@ -89,9 +91,9 @@
 - [x] T046 [US2] Implement task timeline query service in `src/domain/history/history-query-service.ts`
 - [x] T047 [US2] Implement comment service with mention extraction hook and audit/history side effects in `src/domain/comments/comment-service.ts`
 - [x] T048 [US2] Implement attachment service with task-scoped storage paths and metadata validation in `src/domain/attachments/attachment-service.ts`
-- [x] T049 [US2] Implement comments Route Handlers in `app/api/tasks/[taskId]/comments/route.ts`
-- [x] T050 [US2] Implement attachment upload, complete and download Route Handlers in `app/api/tasks/[taskId]/attachments/route.ts` and `app/api/tasks/[taskId]/attachments/[attachmentId]/route.ts`
-- [x] T051 [US2] Implement task detail page with history, comments and attachments tabs in `app/(private)/tasks/[taskId]/page.tsx`
+- [ ] T049 [US2] Implement comments Route Handlers in `app/api/tasks/[taskId]/comments/route.ts`
+- [ ] T050 [US2] Implement attachment upload, complete and download Route Handlers in `app/api/tasks/[taskId]/attachments/route.ts` and `app/api/tasks/[taskId]/attachments/[attachmentId]/route.ts`
+- [ ] T051 [US2] Implement task detail page with history, comments and attachments tabs in `app/(private)/tasks/[taskId]/page.tsx`
 - [x] T052 [US2] Implement timeline component for readable history events in `components/tasks/TaskTimeline.tsx`
 - [x] T053 [US2] Implement comment composer and comment list components in `components/tasks/TaskComments.tsx`
 - [x] T054 [US2] Implement attachment upload/list/download components in `components/tasks/TaskAttachments.tsx`
@@ -109,7 +111,7 @@
 - [x] T059 [US3] Implement e-mail queue service with provider adapter boundary in `src/domain/notifications/email-queue-service.ts`
 - [x] T060 [US3] Implement due-date scan service for upcoming and overdue tasks in `src/domain/notifications/due-date-service.ts`
 - [x] T061 [US3] Wire task, workflow and comment services to emit alert events in `src/domain/notifications/notification-events.ts`
-- [x] T062 [US3] Implement alert inbox and mark-read Route Handlers in `app/api/alerts/route.ts` and `app/api/alerts/[alertId]/read/route.ts`
+- [~] T062 [US3] Implement alert inbox and mark-read Route Handlers in `app/api/alerts/route.ts` and `app/api/alerts/[alertId]/read/route.ts` (only `alerts/route.ts` exists; `[alertId]/read/route.ts` missing)
 - [x] T063 [US3] Implement internal alert inbox UI and unread indicator in `app/(private)/alerts/page.tsx` and `components/alerts/AlertInbox.tsx`
 - [x] T064 [US3] Implement e-mail job processing endpoint or scheduled handler boundary in `app/api/admin/email-jobs/route.ts`
 - [x] T065 [US3] Tighten Firestore rules for alerts and emailQueue access in `firebase/firestore.rules`
@@ -121,36 +123,50 @@
 **Independent Test**: A completed task is archived, leaves active Kanban, appears in archived search and remains read-only with full authorized history.
 
 - [x] T066 [US4] Extend workflow service with archive and restore rules in `src/domain/workflow/workflow-service.ts`
-- [x] T067 [US4] Implement archive and restore Route Handlers in `app/api/tasks/[taskId]/archive/route.ts` and `app/api/tasks/[taskId]/restore/route.ts`
+- [ ] T067 [US4] Implement archive and restore Route Handlers in `app/api/tasks/[taskId]/archive/route.ts` and `app/api/tasks/[taskId]/restore/route.ts`
 - [x] T068 [US4] Implement archived task listing service and filters in `src/domain/tasks/archive-query-service.ts`
 - [x] T069 [US4] Implement archived tasks page with search and filters in `app/(private)/archive/page.tsx`
 - [x] T070 [US4] Implement archive action controls and restore affordance for authorized roles in `components/tasks/ArchiveActions.tsx`
 - [x] T071 [US4] Wire archive/restore history, audit and notification events in `src/domain/workflow/archive-events.ts`
 - [x] T072 [US4] Tighten Firestore rules for archived task read-mostly behavior in `firebase/firestore.rules`
 
-## Phase 4: Integration
+## Phase 4: Infrastructure & Libs
+
+**Purpose**: Complete missing infrastructure pieces and utility libraries.
+
+- [ ] T073 Create Firestore data converters in `src/firebase/converters/core.ts`
+- [ ] T074 Implement validation utilities in `src/lib/validation/index.ts`
+- [ ] T075 Implement error handling utilities in `src/lib/errors/index.ts`
+- [ ] T076 Implement date utilities in `src/lib/dates/index.ts`
+- [~] T077 Fix barrel exports for `src/domain/index.ts`, `src/firebase/index.ts`, `src/types/index.ts`, `src/lib/index.ts` and `components/audit/index.ts` (currently stubs with only comments)
+- [ ] T078 Create test environment setup in `tests/setup/test-env.ts`
+
+## Phase 5: Integration
 
 **Purpose**: Connect slices, run validations and ensure the MVP behaves as one coherent system.
 
-- [x] T073 Run and fix RBAC, workflow, history, notification and archive unit tests in `tests/unit/`
-- [x] T074 Run and fix Route Handler contract tests for tasks, comments, attachments and alerts in `tests/contract/`
-- [x] T075 Run and fix integration tests for Kanban, comments/attachments, alerts, archive and security rules in `tests/integration/`
-- [x] T076 Validate quickstart scenarios and record any deviations in `specs/001-legal-kanban/quickstart.md`
-- [x] T077 Verify Firestore composite indexes for Kanban, archive, alerts and audit queries in `firebase/indexes.json`
-- [x] T078 Verify Vercel/Firebase environment variable coverage against `.env.example`
-- [x] T079 Perform Constitution Check against implemented behavior and document findings in `specs/001-legal-kanban/implementation-check.md`
+- [ ] T079 Implement real assertions in stub unit tests (T018, T022) in `tests/unit/`
+- [ ] T080 Implement real assertions in stub contract tests (T016, T019, T021) in `tests/contract/`
+- [ ] T081 Implement real assertions in stub integration tests (T017, T023, T024) in `tests/integration/`
+- [ ] T082 Run and fix all RBAC, workflow, history, notification and archive unit tests in `tests/unit/`
+- [ ] T083 Run and fix all Route Handler contract tests for tasks, comments, attachments and alerts in `tests/contract/`
+- [ ] T084 Run and fix all integration tests for Kanban, comments/attachments, alerts, archive and security rules in `tests/integration/`
+- [ ] T085 Validate quickstart scenarios and record any deviations in `specs/001-legal-kanban/quickstart.md`
+- [ ] T086 Verify Firestore composite indexes for Kanban, archive, alerts and audit queries in `firebase/indexes.json`
+- [ ] T087 Verify Vercel/Firebase environment variable coverage against `.env.example`
+- [ ] T088 Perform Constitution Check against implemented behavior and document findings in `specs/001-legal-kanban/implementation-check.md`
 
-## Phase 5: Polish
+## Phase 6: Polish
 
 **Purpose**: Harden usability, security and maintainability before handoff.
 
-- [x] T080 Polish Tailwind spacing, color tokens and responsive behavior across `app/(private)/` and `components/`
-- [x] T081 Improve empty, loading, error and permission-denied states in `components/ui/StateViews.tsx`
-- [x] T082 Add accessible labels, focus states and keyboard-safe interactions to `components/kanban/KanbanBoard.tsx` and `components/tasks/TaskForm.tsx`
-- [x] T083 Review alert copy for clarity and deduplication usefulness in `src/domain/notifications/notification-service.ts`
-- [x] T084 Review audit metadata for sensitive data minimization in `src/domain/audit/audit-service.ts`
-- [x] T085 Update README setup and MVP operation notes in `README.md`
-- [x] T086 Run final build, lint and test command set from `package.json`
+- [ ] T089 Polish Tailwind spacing, color tokens and responsive behavior across `app/(private)/` and `components/`
+- [x] T090 Improve empty, loading, error and permission-denied states in `components/ui/StateViews.tsx`
+- [ ] T091 Add accessible labels, focus states and keyboard-safe interactions to `components/kanban/KanbanBoard.tsx` and `components/tasks/TaskForm.tsx`
+- [ ] T092 Review alert copy for clarity and deduplication usefulness in `src/domain/notifications/notification-service.ts`
+- [ ] T093 Review audit metadata for sensitive data minimization in `src/domain/audit/audit-service.ts`
+- [x] T094 Update README setup and MVP operation notes in `README.md`
+- [ ] T095 Run final build, lint and test command set from `package.json`
 
 ## Dependencies & Execution Order
 
@@ -162,8 +178,9 @@
 - US2 Core (T045-T056) depends on US1 task detail and access controls.
 - US3 Core (T057-T065) depends on US1 events and benefits from US2 mention events.
 - US4 Core (T066-T072) depends on US1 workflow and US3 archive notification hooks.
-- Integration (T073-T079) depends on Core completion.
-- Polish (T080-T086) depends on Integration findings.
+- Infrastructure (T073-T078) can proceed in parallel with Core after T025-T027 types/services exist.
+- Integration (T079-T088) depends on Core completion.
+- Polish (T089-T095) depends on Integration findings.
 
 ### User Story Dependencies
 
@@ -179,31 +196,9 @@
 - Within US1, UI tasks T039-T042 can run in parallel with server tasks T035-T038 after shared types/services T025-T034 exist.
 - Within US2, UI tasks T051-T054 can run in parallel with Route Handler tasks T049-T050 after services T046-T048 exist.
 - Within US3, inbox UI T063 can run in parallel with email boundary T064 after notification service T058 exists.
-- Polish tasks T080-T085 can run in parallel after Integration issues are known.
-
-## Parallel Example: US1
-
-```bash
-Task: "T039 [US1] Implement Kanban board UI with responsive columns in components/kanban/KanbanBoard.tsx"
-Task: "T040 [US1] Implement task card component with priority, due date and responsible summary in components/kanban/TaskCard.tsx"
-Task: "T037 [US1] Implement task Route Handlers for list/create/detail/update in app/api/tasks/route.ts and app/api/tasks/[taskId]/route.ts"
-```
-
-## Parallel Example: US2
-
-```bash
-Task: "T052 [US2] Implement timeline component for readable history events in components/tasks/TaskTimeline.tsx"
-Task: "T053 [US2] Implement comment composer and comment list components in components/tasks/TaskComments.tsx"
-Task: "T054 [US2] Implement attachment upload/list/download components in components/tasks/TaskAttachments.tsx"
-```
-
-## Parallel Example: US3
-
-```bash
-Task: "T060 [US3] Implement due-date scan service for upcoming and overdue tasks in src/domain/notifications/due-date-service.ts"
-Task: "T063 [US3] Implement internal alert inbox UI and unread indicator in app/(private)/alerts/page.tsx and components/alerts/AlertInbox.tsx"
-Task: "T064 [US3] Implement e-mail job processing endpoint or scheduled handler boundary in app/api/admin/email-jobs/route.ts"
-```
+- Infrastructure tasks T073-T078 can run in parallel with each other.
+- Integration test tasks T079-T084 can run in parallel after their respective service implementations are done.
+- Polish tasks T089-T094 can run in parallel after Integration issues are known.
 
 ## Implementation Strategy
 
@@ -220,8 +215,9 @@ Task: "T064 [US3] Implement e-mail job processing endpoint or scheduled handler 
 2. Add US2: timeline, comments and controlled attachments.
 3. Add US3: alert inbox, e-mail queue and due-date scan.
 4. Add US4: archive and archived consultation.
-5. Complete Integration and Polish.
+5. Complete Infrastructure and Libs.
+6. Complete Integration and Polish.
 
 ### Acceptance Gate
 
-Before implementation is considered complete, T073-T079 must pass and the final Constitution Check must confirm backend authorization, centralized workflow, audit logs, history preservation, attachment controls and useful notifications.
+Before implementation is considered complete, all Core Route Handlers must exist (T037 full, T038, T049, T050, T062 full, T067), tests in Phase 5 must pass with real assertions, and the final Constitution Check must confirm backend authorization, centralized workflow, audit logs, history preservation, attachment controls and useful notifications.
