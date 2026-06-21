@@ -72,8 +72,8 @@
 - [x] T034 [US1] Implement audit service for success, denied and failed critical events in `src/domain/audit/audit-service.ts`
 - [x] T035 [US1] Implement task create/list/detail/update service with RBAC and audit side effects in `src/domain/tasks/task-service.ts`
 - [x] T036 [US1] Implement centralized workflow transition service with allowed transitions and backward detection in `src/domain/workflow/workflow-service.ts`
-- [~] T037 [US1] Implement task Route Handlers for list/create/detail/update in `app/api/tasks/route.ts` and `app/api/tasks/[taskId]/route.ts` (only `tasks/route.ts` exists; `[taskId]/route.ts` missing)
-- [ ] T038 [US1] Implement transition Route Handler in `app/api/tasks/[taskId]/transitions/route.ts`
+- [x] T037 [US1] Implement task Route Handlers for list/create/detail/update in `app/api/tasks/route.ts` and `app/api/tasks/[taskId]/route.ts`
+- [x] T038 [US1] Implement transition Route Handler in `app/api/tasks/[taskId]/transitions/route.ts`
 - [x] T039 [US1] Implement Kanban board UI with responsive columns in `components/kanban/KanbanBoard.tsx`
 - [x] T040 [US1] Implement task card component with priority, due date and responsible summary in `components/kanban/TaskCard.tsx`
 - [x] T041 [US1] Implement task create/edit form with sober Tailwind styling in `components/tasks/TaskForm.tsx`
@@ -91,9 +91,9 @@
 - [x] T046 [US2] Implement task timeline query service in `src/domain/history/history-query-service.ts`
 - [x] T047 [US2] Implement comment service with mention extraction hook and audit/history side effects in `src/domain/comments/comment-service.ts`
 - [x] T048 [US2] Implement attachment service with task-scoped storage paths and metadata validation in `src/domain/attachments/attachment-service.ts`
-- [ ] T049 [US2] Implement comments Route Handlers in `app/api/tasks/[taskId]/comments/route.ts`
-- [ ] T050 [US2] Implement attachment upload, complete and download Route Handlers in `app/api/tasks/[taskId]/attachments/route.ts` and `app/api/tasks/[taskId]/attachments/[attachmentId]/route.ts`
-- [ ] T051 [US2] Implement task detail page with history, comments and attachments tabs in `app/(private)/tasks/[taskId]/page.tsx`
+- [x] T049 [US2] Implement comments Route Handlers in `app/api/tasks/[taskId]/comments/route.ts`
+- [x] T050 [US2] Implement attachment upload, complete and download Route Handlers in `app/api/tasks/[taskId]/attachments/route.ts` and `app/api/tasks/[taskId]/attachments/[attachmentId]/route.ts`
+- [x] T051 [US2] Implement task detail page with history, comments and attachments tabs in `app/(private)/tasks/[taskId]/page.tsx`
 - [x] T052 [US2] Implement timeline component for readable history events in `components/tasks/TaskTimeline.tsx`
 - [x] T053 [US2] Implement comment composer and comment list components in `components/tasks/TaskComments.tsx`
 - [x] T054 [US2] Implement attachment upload/list/download components in `components/tasks/TaskAttachments.tsx`
@@ -111,7 +111,7 @@
 - [x] T059 [US3] Implement e-mail queue service with provider adapter boundary in `src/domain/notifications/email-queue-service.ts`
 - [x] T060 [US3] Implement due-date scan service for upcoming and overdue tasks in `src/domain/notifications/due-date-service.ts`
 - [x] T061 [US3] Wire task, workflow and comment services to emit alert events in `src/domain/notifications/notification-events.ts`
-- [~] T062 [US3] Implement alert inbox and mark-read Route Handlers in `app/api/alerts/route.ts` and `app/api/alerts/[alertId]/read/route.ts` (only `alerts/route.ts` exists; `[alertId]/read/route.ts` missing)
+- [x] T062 [US3] Implement alert inbox and mark-read Route Handlers in `app/api/alerts/route.ts` and `app/api/alerts/[alertId]/read/route.ts`
 - [x] T063 [US3] Implement internal alert inbox UI and unread indicator in `app/(private)/alerts/page.tsx` and `components/alerts/AlertInbox.tsx`
 - [x] T064 [US3] Implement e-mail job processing endpoint or scheduled handler boundary in `app/api/admin/email-jobs/route.ts`
 - [x] T065 [US3] Tighten Firestore rules for alerts and emailQueue access in `firebase/firestore.rules`
@@ -123,7 +123,7 @@
 **Independent Test**: A completed task is archived, leaves active Kanban, appears in archived search and remains read-only with full authorized history.
 
 - [x] T066 [US4] Extend workflow service with archive and restore rules in `src/domain/workflow/workflow-service.ts`
-- [ ] T067 [US4] Implement archive and restore Route Handlers in `app/api/tasks/[taskId]/archive/route.ts` and `app/api/tasks/[taskId]/restore/route.ts`
+- [x] T067 [US4] Implement archive and restore Route Handlers in `app/api/tasks/[taskId]/archive/route.ts` and `app/api/tasks/[taskId]/restore/route.ts`
 - [x] T068 [US4] Implement archived task listing service and filters in `src/domain/tasks/archive-query-service.ts`
 - [x] T069 [US4] Implement archived tasks page with search and filters in `app/(private)/archive/page.tsx`
 - [x] T070 [US4] Implement archive action controls and restore affordance for authorized roles in `components/tasks/ArchiveActions.tsx`

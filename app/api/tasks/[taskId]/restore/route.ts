@@ -3,8 +3,8 @@ import type { NextRequest } from 'next/server';
 import { getTask } from '@/src/domain/tasks/task-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { assertCan } from '@/src/domain/rbac/rbac-service';
-import { onTaskRestored } from '@/src/domain/workflow/archive-events';
 import { adminDb } from '@/src/firebase/admin';
+import { onTaskRestored } from '@/src/domain/workflow/archive-events';
 
 export async function POST(
   request: NextRequest,
@@ -22,7 +22,7 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    assertCan(session, 'edit', 'task');
+    assertCan(session, 'restore', 'task');
 
     const task = await getTask(taskId);
     if (!task) {
@@ -30,29 +30,30 @@ export async function POST(
     }
 
     if (!task.archived) {
-      return NextResponse.json({ error: 'Task is not archived' }, { status: 400 });
+      return NextResponse.json({ error: 'Task is not archived' }, { status: 409 });
     }
 
-    const now = new Date();
     const body = await request.json();
-    const targetStage = body.stageId || 'entrada';
+    const targetStageId: string = body.stageId || 'entrada';
 
+    const now = new Date();
     await adminDb.collection('tasks').doc(taskId).update({
       archived: false,
-      stageId: targetStage,
+      stageId: targetStageId,
       archivedAt: null,
-      archivedBy: null,
       updatedAt: now,
       updatedBy: session.uid,
     });
 
-    await onTaskRestored(task, session, targetStage);
+    const updatedTask = await getTask(taskId);
+    if (updatedTask) {
+      await onTaskRestored(updatedTask, session, targetStageId);
+    }
 
-    const updated = await getTask(taskId);
-    return NextResponse.json(updated, { status: 200 });
-  } catch (error) {
+    return NextResponse.json(updatedTask);
+  } catch (error: any) {
     console.error('Error restoring task:', error);
-    if ((error as any).message?.includes('permission')) {
+    if (error?.message?.includes('cannot')) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
     return NextResponse.json({ error: 'Failed to restore task' }, { status: 500 });

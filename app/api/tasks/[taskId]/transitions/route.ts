@@ -1,13 +1,10 @@
-// Transitions API Route Handler (T038)
-// Execute workflow stage transitions with validation and side effects
-
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getTask } from '@/src/domain/tasks/task-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
-import { assertCan } from '@/src/domain/rbac/rbac-service';
 import { validateTransition } from '@/src/domain/workflow/workflow-service';
-import { recordStageChange } from '@/src/domain/history/history-service';
+import { assertCanAccessTask } from '@/src/domain/rbac/rbac-service';
+import { recordStageChange, recordTaskCompletion } from '@/src/domain/history/history-service';
 import { logSuccess } from '@/src/domain/audit/audit-service';
 import { emitStageChangedAlert, emitTaskCompletedAlert } from '@/src/domain/notifications/notification-events';
 import { adminDb } from '@/src/firebase/admin';
@@ -29,32 +26,21 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    assertCan(session, 'move', 'task');
+    const body = await request.json();
+    const { targetStageId } = body;
+
+    if (!targetStageId) {
+      return NextResponse.json({ error: 'targetStageId is required' }, { status: 422 });
+    }
 
     const task = await getTask(taskId);
     if (!task) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    if (task.archived) {
-      return NextResponse.json(
-        { error: 'Cannot transition an archived task' },
-        { status: 409 }
-      );
-    }
-
-    const body = await request.json();
-    const targetStageId = body.targetStageId as StageId;
-
-    if (!targetStageId) {
-      return NextResponse.json(
-        { error: 'targetStageId is required' },
-        { status: 422 }
-      );
-    }
+    assertCanAccessTask(session, task, 'move');
 
     const validation = validateTransition(task.stageId, targetStageId);
-
     if (!validation.valid) {
       return NextResponse.json(
         { error: validation.message || 'Invalid transition' },
@@ -62,50 +48,36 @@ export async function POST(
       );
     }
 
-    const now = new Date();
-    const updates: Record<string, unknown> = {
+    const previousStage = task.stageId;
+
+    await adminDb.collection('tasks').doc(taskId).update({
       stageId: targetStageId,
-      updatedAt: now,
+      updatedAt: new Date(),
       updatedBy: session.uid,
-    };
-
-    if (targetStageId === 'concluida') {
-      updates.completedAt = now;
-    }
-
-    await adminDb.collection('tasks').doc(taskId).update(updates);
-
-    await recordStageChange(
-      taskId,
-      session.uid,
-      session.roleId,
-      task.stageId,
-      targetStageId,
-      body.comment
-    );
-
-    await logSuccess(session.uid, session.roleId, 'move', 'task', taskId, {
-      fromStage: task.stageId,
-      toStage: targetStageId,
-      backward: validation.backward,
+      ...(targetStageId === 'concluida' ? { completedAt: new Date() } : {}),
     });
 
-    await emitStageChangedAlert(
-      task,
-      task.stageId,
-      targetStageId,
-      session
-    );
+    await recordStageChange(taskId, session.uid, session.roleId, previousStage, targetStageId);
 
-    if (targetStageId === 'concluida') {
-      await emitTaskCompletedAlert(task, session);
+    await logSuccess(session.uid, session.roleId, 'move', 'task', taskId, {
+      fromStage: previousStage,
+      toStage: targetStageId,
+    });
+
+    const updatedTask = await getTask(taskId);
+    if (updatedTask) {
+      if (targetStageId === 'concluida') {
+        await recordTaskCompletion(taskId, session.uid, session.roleId);
+        await emitTaskCompletedAlert(updatedTask, session);
+      } else {
+        await emitStageChangedAlert(updatedTask, previousStage as StageId, targetStageId as StageId, session);
+      }
     }
 
     return NextResponse.json({
-      taskId,
-      previousStageId: task.stageId,
+      taskId: taskId,
+      previousStageId: previousStage,
       stageId: targetStageId,
-      backward: validation.backward,
     });
   } catch (error: any) {
     console.error('Error transitioning task:', error);

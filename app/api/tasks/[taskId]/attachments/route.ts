@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { uploadAttachment, getTaskAttachments } from '@/src/domain/attachments/attachment-service';
+import {
+  getTaskAttachments,
+  uploadAttachment,
+} from '@/src/domain/attachments/attachment-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
-import { assertCan } from '@/src/domain/rbac/rbac-service';
-import { randomUUID } from 'crypto';
+import { assertCanAccessTask } from '@/src/domain/rbac/rbac-service';
+import { getTask } from '@/src/domain/tasks/task-service';
 
 export async function GET(
   request: NextRequest,
@@ -21,10 +24,14 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    assertCan(session, 'view', 'task');
+    const task = await getTask(taskId);
+    if (!task) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+    }
+
+    assertCanAccessTask(session, task, 'view');
 
     const attachments = await getTaskAttachments(taskId);
-
     return NextResponse.json(attachments);
   } catch (error) {
     console.error('Error fetching attachments:', error);
@@ -48,17 +55,22 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    assertCan(session, 'edit', 'task');
-
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-
-    if (!file) {
-      return NextResponse.json({ error: 'File is required' }, { status: 400 });
+    const task = await getTask(taskId);
+    if (!task) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    const attachmentId = randomUUID();
+    assertCanAccessTask(session, task, 'attach');
+
+    const formData = await request.formData();
+    const file = formData.get('file') as File | null;
+
+    if (!file) {
+      return NextResponse.json({ error: 'File is required' }, { status: 422 });
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
+    const attachmentId = `att_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     const attachment = await uploadAttachment(
       taskId,
@@ -70,9 +82,9 @@ export async function POST(
     );
 
     return NextResponse.json(attachment, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error uploading attachment:', error);
-    if ((error as any).message?.includes('permission')) {
+    if (error?.message?.includes('cannot')) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
     return NextResponse.json({ error: 'Failed to upload attachment' }, { status: 500 });

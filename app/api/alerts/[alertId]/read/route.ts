@@ -24,6 +24,6 @@ export async function POST(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error marking alert as read:', error);
-    return NextResponse.json({ error: 'Failed to update alert' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to mark alert as read' }, { status: 500 });
   }
 }

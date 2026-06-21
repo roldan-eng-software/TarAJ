@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getAttachment, getDownloadUrl, deleteAttachment } from '@/src/domain/attachments/attachment-service';
+import { getAttachment, getDownloadUrl } from '@/src/domain/attachments/attachment-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
-import { assertCan } from '@/src/domain/rbac/rbac-service';
+import { assertCanAccessTask } from '@/src/domain/rbac/rbac-service';
+import { getTask } from '@/src/domain/tasks/task-service';
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,12 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    assertCan(session, 'view', 'task');
+    const task = await getTask(taskId);
+    if (!task) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+    }
+
+    assertCanAccessTask(session, task, 'view');
 
     const attachment = await getAttachment(taskId, attachmentId);
     if (!attachment) {
@@ -29,36 +35,9 @@ export async function GET(
 
     const downloadUrl = await getDownloadUrl(taskId, attachmentId);
 
-    return NextResponse.json({ downloadUrl, attachment });
+    return NextResponse.json({ ...attachment, downloadUrl });
   } catch (error) {
-    console.error('Error getting attachment download:', error);
-    return NextResponse.json({ error: 'Failed to get download URL' }, { status: 500 });
-  }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ taskId: string; attachmentId: string }> }
-) {
-  try {
-    const { taskId, attachmentId } = await params;
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await getSessionUser(token);
-    if (!session) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    assertCan(session, 'delete', 'attachment');
-
-    await deleteAttachment(taskId, attachmentId, session);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting attachment:', error);
-    return NextResponse.json({ error: 'Failed to delete attachment' }, { status: 500 });
+    console.error('Error fetching attachment:', error);
+    return NextResponse.json({ error: 'Failed to fetch attachment' }, { status: 500 });
   }
 }
