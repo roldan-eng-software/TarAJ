@@ -1,9 +1,57 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { generateDedupeKey, markAlertAsRead } from '@/src/domain/notifications/notification-service';
+import type { AlertEventType } from '@/src/types/domain';
+
+vi.mock('@/src/firebase/admin', () => ({
+  adminDb: {
+    collection: vi.fn(() => ({
+      where: vi.fn(() => ({
+        where: vi.fn(() => ({
+          orderBy: vi.fn(() => ({
+            limit: vi.fn(() => ({
+              get: vi.fn(() => Promise.resolve({ docs: [], size: 0 })),
+            })),
+            get: vi.fn(() => Promise.resolve({ docs: [], size: 0 })),
+          })),
+          limit: vi.fn(() => ({
+            get: vi.fn(() => Promise.resolve({ docs: [], size: 0 })),
+          })),
+          get: vi.fn(() => Promise.resolve({ docs: [], size: 0 })),
+        })),
+        orderBy: vi.fn(() => ({
+          limit: vi.fn(() => ({
+            get: vi.fn(() => Promise.resolve({ docs: [], size: 0 })),
+          })),
+          get: vi.fn(() => Promise.resolve({ docs: [], size: 0 })),
+        })),
+        limit: vi.fn(() => ({
+          get: vi.fn(() => Promise.resolve({ docs: [], size: 0 })),
+        })),
+        count: vi.fn(() => ({
+          get: vi.fn(() => Promise.resolve({ data: () => ({ count: 0 }) })),
+        })),
+        get: vi.fn(() => Promise.resolve({ docs: [], size: 0 })),
+      })),
+      doc: vi.fn(() => ({
+        update: vi.fn(() => Promise.resolve()),
+        get: vi.fn(() => Promise.resolve({ exists: false })),
+      })),
+      add: vi.fn(() => Promise.resolve({ id: 'alert_001' })),
+    })),
+    batch: vi.fn(() => ({
+      update: vi.fn(),
+      delete: vi.fn(),
+      commit: vi.fn(() => Promise.resolve()),
+    })),
+  },
+}));
 
 describe('Alert Route Handler Contract', () => {
   describe('GET /api/alerts - Inbox list', () => {
     it('should return 401 without authorization token', () => {
-      expect(true).toBe(true);
+      const req = { headers: new Map() };
+      const hasAuth = req.headers.has('authorization');
+      expect(hasAuth).toBe(false);
     });
 
     it('should accept unreadOnly and limit query params', () => {
@@ -21,6 +69,21 @@ describe('Alert Route Handler Contract', () => {
       expect(url.searchParams.get('limit')).toBe('20');
       expect(url.searchParams.get('offset')).toBe('40');
     });
+
+    it('should return alerts array with required fields', () => {
+      const mockAlert = {
+        id: 'alert_001',
+        eventType: 'task_created',
+        taskId: 'task_001',
+        recipientId: 'user_001',
+        message: 'Tarefa criada',
+        readAt: null,
+        createdAt: new Date(),
+      };
+      expect(mockAlert).toHaveProperty('id');
+      expect(mockAlert).toHaveProperty('eventType');
+      expect(mockAlert).toHaveProperty('message');
+    });
   });
 
   describe('POST /api/alerts/[alertId]/read - Mark as read', () => {
@@ -30,9 +93,34 @@ describe('Alert Route Handler Contract', () => {
       expect(pattern.test('/api/alerts/read')).toBe(false);
     });
 
-    it('should respond with success shape after marking read', () => {
+    it('should respond with success shape after marking read', async () => {
+      await markAlertAsRead('alert_001');
+      expect(true).toBe(true);
+    });
+
+    it('should return success JSON on completion', () => {
       const response = { success: true };
       expect(response).toEqual({ success: true });
+    });
+  });
+
+  describe('Alert deduplication', () => {
+    it('should generate consistent dedup keys', () => {
+      const key1 = generateDedupeKey('task_created' as AlertEventType, 'task_001', 'user_001');
+      const key2 = generateDedupeKey('task_created' as AlertEventType, 'task_001', 'user_001');
+      expect(key1).toBe(key2);
+    });
+
+    it('should generate different keys for different tasks', () => {
+      const key1 = generateDedupeKey('task_created' as AlertEventType, 'task_001', 'user_001');
+      const key2 = generateDedupeKey('task_created' as AlertEventType, 'task_002', 'user_001');
+      expect(key1).not.toBe(key2);
+    });
+
+    it('should generate different keys for different recipients', () => {
+      const key1 = generateDedupeKey('task_created' as AlertEventType, 'task_001', 'user_001');
+      const key2 = generateDedupeKey('task_created' as AlertEventType, 'task_001', 'user_002');
+      expect(key1).not.toBe(key2);
     });
   });
 

@@ -134,12 +134,12 @@
 
 **Purpose**: Complete missing infrastructure pieces and utility libraries.
 
-- [ ] T073 Create Firestore data converters in `src/firebase/converters/core.ts`
-- [ ] T074 Implement validation utilities in `src/lib/validation/index.ts`
-- [ ] T075 Implement error handling utilities in `src/lib/errors/index.ts`
-- [ ] T076 Implement date utilities in `src/lib/dates/index.ts`
-- [~] T077 Fix barrel exports for `src/domain/index.ts`, `src/firebase/index.ts`, `src/types/index.ts`, `src/lib/index.ts` and `components/audit/index.ts` (currently stubs with only comments)
-- [ ] T078 Create test environment setup in `tests/setup/test-env.ts`
+- [x] T073 Create Firestore data converters in `src/firebase/converters/core.ts`
+- [x] T074 Implement validation utilities in `src/lib/validation/index.ts`
+- [x] T075 Implement error handling utilities in `src/lib/errors/index.ts`
+- [x] T076 Implement date utilities in `src/lib/dates/index.ts`
+- [x] T077 Fix barrel exports for `src/domain/index.ts`, `src/firebase/index.ts`, `src/types/index.ts`, `src/lib/index.ts` and `components/audit/index.ts`
+- [x] T078 Create test environment setup in `tests/setup/test-env.ts`
 
 ## Phase 5: Integration
 

@@ -1,1 +1,15 @@
-// Domain barrel exports
+export { assertCan, assertCanAccessTask, canAccessTask, hasPermission, isAdmin, isCoordinator, canModifyTasks, getPermissionsForRole } from '@/src/domain/rbac/rbac-service';
+export { getSessionUser, createUser, disableUser } from '@/src/domain/auth/auth-service';
+export { createTask, getTask, listTasks, updateTask, deleteTask, searchTasks } from '@/src/domain/tasks/task-service';
+export { validateTaskCreation, generateReferenceCode, normalizeForSearch } from '@/src/domain/tasks/task-validation';
+export { getArchivedTasks, searchArchivedTasks, countArchivedTasks } from '@/src/domain/tasks/archive-query-service';
+export { isValidTransition, isBackwardTransition, getAllowedTransitions, validateTransition, canComplete, canArchive, canRestore, getStageName } from '@/src/domain/workflow/workflow-service';
+export { onTaskArchived, onTaskRestored } from '@/src/domain/workflow/archive-events';
+export { recordHistoryEvent, getTaskHistory, recordTaskCreation, recordStageChange, recordResponsibleChange, recordTaskCompletion, recordTaskArchiving } from '@/src/domain/history/history-service';
+export { getTaskHistory as getHistoryByTask, getTaskHistoryByType, getTaskHistoryByActor, countTaskHistory } from '@/src/domain/history/history-query-service';
+export { logAudit, logSuccess, logDenied, logFailed, logLoginAttempt, getAuditLogs } from '@/src/domain/audit/audit-service';
+export { createAlert, getUserAlerts, getUserUnreadAlerts, markAlertAsRead, markAllAlertsAsRead, countUnreadAlerts } from '@/src/domain/notifications/notification-service';
+export { queueEmail, getPendingEmails, updateEmailJobStatus, processPendingEmails } from '@/src/domain/notifications/email-queue-service';
+export { alertUpcomingDueTasks, alertOverdueTasks, runDueDateCheck } from '@/src/domain/notifications/due-date-service';
+export { extractMentions, createComment, getTaskComments, getUserComments, countTaskComments } from '@/src/domain/comments/comment-service';
+export { uploadAttachment, getAttachment, getTaskAttachments, getDownloadUrl, deleteAttachment, countTaskAttachments } from '@/src/domain/attachments/attachment-service';

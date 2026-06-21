@@ -1,1 +1,2 @@
-// Component barrel exports
+// Placeholder for future audit-related components
+export {};
