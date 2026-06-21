@@ -4,6 +4,7 @@
 import { adminDb } from '@/src/firebase/admin';
 import type { AuditLog, PermissionAction, ResourceType } from '@/src/types/domain';
 import { generateRequestId } from '@/src/lib/request-id';
+import { createHash } from 'crypto';
 
 /**
  * Log an audit event
@@ -60,10 +61,12 @@ export async function logDenied(
   actorRole: string,
   action: PermissionAction,
   resourceType: ResourceType,
-  resourceId: string
+  resourceId: string,
+  metadata?: Record<string, unknown>
 ): Promise<string> {
   return logAudit(actor, actorRole, action, resourceType, resourceId, 'denied', {
-    reason: 'Authorization check failed',
+    reason: metadata?.reason || 'Authorization check failed',
+    ...(metadata || {}),
   });
 }
 
@@ -84,7 +87,7 @@ export async function logFailed(
 }
 
 /**
- * Log login attempt
+ * Log login attempt (email is hashed for privacy)
  */
 export async function logLoginAttempt(
   email: string,
@@ -93,23 +96,30 @@ export async function logLoginAttempt(
 ): Promise<string> {
   const now = new Date();
   const requestId = generateRequestId();
+  const emailHash = createHash('sha256').update(email.toLowerCase().trim()).digest('hex');
+  const emailPrefix = email.substring(0, 3) + '***';
 
   await adminDb.collection('auditLogs').add({
-    actor: email,
+    actor: emailHash,
     actorRole: 'system',
     action: 'view' as any,
     resourceType: 'user' as any,
-    resourceId: email,
+    resourceId: emailHash,
     result: success ? ('success' as const) : ('failed' as const),
     metadata: {
       eventType: 'login_attempt',
-      error,
+      emailPrefix,
+      ...(error ? { error: sanitizeErrorMessage(error) } : {}),
     },
     occurredAt: now,
     requestId,
   });
 
   return requestId;
+}
+
+function sanitizeErrorMessage(message: string): string {
+  return message.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]');
 }
 
 /**

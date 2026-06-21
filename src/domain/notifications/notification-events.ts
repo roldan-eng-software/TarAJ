@@ -64,7 +64,7 @@ export async function emitTaskCreatedAlert(
     task,
     'task_created',
     task.stageId,
-    `Tarefa "${task.title}" foi criada`,
+    `Tarefa "${task.title}" foi criada por ${actor.displayName}`,
     `[TarAJ] Nova tarefa: ${task.title}`,
     `A tarefa "${task.title}" foi criada por ${actor.displayName}.`,
     `<p>A tarefa <strong>"${task.title}"</strong> foi criada por ${actor.displayName}.</p>`,
@@ -81,7 +81,7 @@ export async function emitResponsibleChangedAlert(
     task,
     'responsible_changed',
     task.stageId,
-    `Você foi designado responsável pela tarefa "${task.title}"`,
+    `Você foi designado responsável pela tarefa "${task.title}" por ${actor.displayName}`,
     `[TarAJ] Responsável alterado: ${task.title}`,
     `Você foi designado responsável pela tarefa "${task.title}" por ${actor.displayName}.`,
     `<p>Você foi designado responsável pela tarefa <strong>"${task.title}"</strong> por ${actor.displayName}.</p>`,
@@ -100,8 +100,8 @@ export async function emitStageChangedAlert(
   const eventType: AlertEventType = backward ? 'stage_moved_backward' : 'stage_changed';
   const toStageName = getStageName(toStageId);
   const message = backward
-    ? `Tarefa "${task.title}" retornou para "${toStageName}"`
-    : `Tarefa "${task.title}" mudou para "${toStageName}"`;
+    ? `Tarefa "${task.title}" retornou para "${toStageName}" por ${actor.displayName}`
+    : `Tarefa "${task.title}" mudou para "${toStageName}" por ${actor.displayName}`;
 
   await notifyRecipients(
     task,
@@ -125,7 +125,7 @@ export async function emitMentionAlert(
     task,
     'mentioned_in_comment',
     task.stageId,
-    `Você foi mencionado na tarefa "${task.title}"`,
+    `Você foi mencionado por ${actor.displayName} na tarefa "${task.title}"`,
     `[TarAJ] Menção: ${task.title}`,
     `Você foi mencionado por ${actor.displayName} na tarefa "${task.title}".`,
     `<p>Você foi mencionado por ${actor.displayName} na tarefa <strong>"${task.title}"</strong>.</p>`,
@@ -142,7 +142,7 @@ export async function emitTaskCompletedAlert(
     task,
     'task_completed',
     'concluida',
-    `Tarefa "${task.title}" foi concluída`,
+    `Tarefa "${task.title}" foi concluída por ${actor.displayName}`,
     `[TarAJ] Tarefa concluída: ${task.title}`,
     `A tarefa "${task.title}" foi concluída por ${actor.displayName}.`,
     `<p>A tarefa <strong>"${task.title}"</strong> foi concluída por ${actor.displayName}.</p>`,
@@ -159,7 +159,7 @@ export async function emitTaskArchivedAlert(
     task,
     'task_archived',
     'arquivada',
-    `Tarefa "${task.title}" foi arquivada`,
+    `Tarefa "${task.title}" foi arquivada por ${actor.displayName}`,
     `[TarAJ] Tarefa arquivada: ${task.title}`,
     `A tarefa "${task.title}" foi arquivada por ${actor.displayName}.`,
     `<p>A tarefa <strong>"${task.title}"</strong> foi arquivada por ${actor.displayName}.</p>`,
@@ -177,7 +177,7 @@ export async function emitTaskRestoredAlert(
     task,
     'task_restored',
     targetStageId,
-    `Tarefa "${task.title}" foi restaurada`,
+    `Tarefa "${task.title}" foi restaurada por ${actor.displayName}`,
     `[TarAJ] Tarefa restaurada: ${task.title}`,
     `A tarefa "${task.title}" foi restaurada por ${actor.displayName}.`,
     `<p>A tarefa <strong>"${task.title}"</strong> foi restaurada por ${actor.displayName}.</p>`,

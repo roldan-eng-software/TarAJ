@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { LoadingState, EmptyState } from '@/components/ui/StateViews';
 import type { Task } from '@/src/types/domain';
 
 function getToken(): string | undefined {
@@ -52,11 +53,11 @@ export default function ArchivePage() {
   };
 
   if (loading) {
-    return <div className="p-6 text-center text-gray-500">Carregando...</div>;
+    return <LoadingState message="Carregando..." />;
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Tarefas Arquivadas</h1>
 
       <form onSubmit={handleSearch} className="mb-6">
@@ -72,16 +73,14 @@ export default function ArchivePage() {
       {error && <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg">{error}</div>}
 
       {tasks.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <p>Nenhuma tarefa arquivada encontrada.</p>
-        </div>
+        <EmptyState message="Nenhuma tarefa arquivada encontrada." />
       ) : (
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {tasks.map((task) => (
             <Link
               key={task.id}
               href={`/tasks/${task.id}`}
-              className="block p-4 bg-white rounded-lg border hover:shadow-sm transition"
+              className="block p-4 bg-white rounded-lg border hover:shadow-md transition"
             >
               <div className="flex justify-between items-start">
                 <div>

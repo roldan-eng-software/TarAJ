@@ -6,6 +6,7 @@ import TaskTimeline from '@/components/tasks/TaskTimeline';
 import TaskComments from '@/components/tasks/TaskComments';
 import TaskAttachments from '@/components/tasks/TaskAttachments';
 import ArchiveActions from '@/components/tasks/ArchiveActions';
+import { LoadingState, ErrorState } from '@/components/ui/StateViews';
 import type { Task } from '@/src/types/domain';
 import type { TaskComment } from '@/src/domain/comments/comment-service';
 import type { TaskAttachment } from '@/src/domain/attachments/attachment-service';
@@ -118,27 +119,11 @@ export default function TaskDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-gray-500 text-lg">Carregando tarefa...</p>
-      </div>
-    );
+    return <LoadingState message="Carregando tarefa..." />;
   }
 
   if (error || !task) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-red-500 text-lg mb-4">{error || 'Tarefa não encontrada'}</p>
-          <button
-            onClick={() => router.push('/kanban')}
-            className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600"
-          >
-            Voltar ao Kanban
-          </button>
-        </div>
-      </div>
-    );
+    return <ErrorState message={error || 'Tarefa não encontrada'} />;
   }
 
   return (
@@ -163,7 +148,7 @@ export default function TaskDetailPage() {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-4">
           <div>
             <span className="text-gray-500">Categoria:</span>{' '}
             <span className="text-gray-900">{task.category}</span>
@@ -212,12 +197,12 @@ export default function TaskDetailPage() {
       </div>
 
       <div className="border-b border-gray-200 mb-6">
-        <nav className="flex gap-6">
+        <nav className="flex gap-4 sm:gap-6 overflow-x-auto">
           {(['timeline', 'comments', 'attachments'] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-3 text-sm font-medium border-b-2 transition ${
+              className={`pb-3 text-sm font-medium border-b-2 transition focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none rounded ${
                 activeTab === tab
                   ? 'border-sky-500 text-sky-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'

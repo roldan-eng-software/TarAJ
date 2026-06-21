@@ -69,7 +69,7 @@ export async function uploadAttachment(
     'attachment',
     attachmentId,
     'success',
-    { taskId, fileName, fileSize: fileBuffer.length }
+    { taskId, fileSize: fileBuffer.length }
   );
 
   return { id: attachmentId, ...metadata };

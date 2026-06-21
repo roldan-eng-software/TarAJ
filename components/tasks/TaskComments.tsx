@@ -60,12 +60,12 @@ export default function TaskComments({ taskId, comments = [] }: TaskCommentsProp
 
   return (
     <div className="space-y-4">
-      <div className="space-y-3">
+      <div className="space-y-3" role="list">
         {comments.length === 0 ? (
           <p className="text-gray-500 text-sm">Nenhum comentário ainda.</p>
         ) : (
           comments.map((comment) => (
-            <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
+            <div key={comment.id} role="listitem" className="bg-gray-50 p-3 rounded-lg">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-medium text-sm">{comment.authorName}</p>
@@ -86,11 +86,12 @@ export default function TaskComments({ taskId, comments = [] }: TaskCommentsProp
       </div>
 
       <div className="border-t pt-4">
-        <label className="block text-sm font-medium text-gray-900 mb-2">
+        <label htmlFor="comment-textarea" className="block text-sm font-medium text-gray-900 mb-2">
           Adicionar comentário
         </label>
         <textarea
           ref={textareaRef}
+          id="comment-textarea"
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -99,11 +100,11 @@ export default function TaskComments({ taskId, comments = [] }: TaskCommentsProp
           rows={3}
           disabled={isSubmitting}
         />
-        {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+        {error && <p className="text-red-500 text-xs mt-1" role="alert">{error}</p>}
         <button
           onClick={handleSubmit}
           disabled={!newComment.trim() || isSubmitting}
-          className="mt-2 px-4 py-2 bg-sky-500 text-white text-sm font-medium rounded-lg hover:bg-sky-600 disabled:bg-gray-300 transition"
+          className="mt-2 px-4 py-2 bg-sky-500 text-white text-sm font-medium rounded-lg hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {isSubmitting ? 'Enviando...' : 'Enviar'}
         </button>

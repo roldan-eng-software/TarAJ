@@ -145,28 +145,28 @@
 
 **Purpose**: Connect slices, run validations and ensure the MVP behaves as one coherent system.
 
-- [ ] T079 Implement real assertions in stub unit tests (T018, T022) in `tests/unit/`
-- [ ] T080 Implement real assertions in stub contract tests (T016, T019, T021) in `tests/contract/`
-- [ ] T081 Implement real assertions in stub integration tests (T017, T023, T024) in `tests/integration/`
-- [ ] T082 Run and fix all RBAC, workflow, history, notification and archive unit tests in `tests/unit/`
-- [ ] T083 Run and fix all Route Handler contract tests for tasks, comments, attachments and alerts in `tests/contract/`
-- [ ] T084 Run and fix all integration tests for Kanban, comments/attachments, alerts, archive and security rules in `tests/integration/`
-- [ ] T085 Validate quickstart scenarios and record any deviations in `specs/001-legal-kanban/quickstart.md`
-- [ ] T086 Verify Firestore composite indexes for Kanban, archive, alerts and audit queries in `firebase/indexes.json`
-- [ ] T087 Verify Vercel/Firebase environment variable coverage against `.env.example`
-- [ ] T088 Perform Constitution Check against implemented behavior and document findings in `specs/001-legal-kanban/implementation-check.md`
+- [x] T079 Implement real assertions in stub unit tests (T018, T022) in `tests/unit/`
+- [x] T080 Implement real assertions in stub contract tests (T016, T019, T021) in `tests/contract/`
+- [x] T081 Implement real assertions in stub integration tests (T017, T023, T024) in `tests/integration/`
+- [x] T082 Run and fix all RBAC, workflow, history, notification and archive unit tests in `tests/unit/`
+- [x] T083 Run and fix all Route Handler contract tests for tasks, comments, attachments and alerts in `tests/contract/`
+- [x] T084 Run and fix all integration tests for Kanban, comments/attachments, alerts, archive and security rules in `tests/integration/`
+- [x] T085 Validate quickstart scenarios and record any deviations in `specs/001-legal-kanban/quickstart.md`
+- [x] T086 Verify Firestore composite indexes for Kanban, archive, alerts and audit queries in `firebase/indexes.json`
+- [x] T087 Verify Vercel/Firebase environment variable coverage against `.env.example`
+- [x] T088 Perform Constitution Check against implemented behavior and document findings in `specs/001-legal-kanban/implementation-check.md`
 
 ## Phase 6: Polish
 
 **Purpose**: Harden usability, security and maintainability before handoff.
 
-- [ ] T089 Polish Tailwind spacing, color tokens and responsive behavior across `app/(private)/` and `components/`
+- [x] T089 Polish Tailwind spacing, color tokens and responsive behavior across `app/(private)/` and `components/`
 - [x] T090 Improve empty, loading, error and permission-denied states in `components/ui/StateViews.tsx`
-- [ ] T091 Add accessible labels, focus states and keyboard-safe interactions to `components/kanban/KanbanBoard.tsx` and `components/tasks/TaskForm.tsx`
-- [ ] T092 Review alert copy for clarity and deduplication usefulness in `src/domain/notifications/notification-service.ts`
-- [ ] T093 Review audit metadata for sensitive data minimization in `src/domain/audit/audit-service.ts`
+- [x] T091 Add accessible labels, focus states and keyboard-safe interactions to `components/kanban/KanbanBoard.tsx` and `components/tasks/TaskForm.tsx`
+- [x] T092 Review alert copy for clarity and deduplication usefulness in `src/domain/notifications/notification-service.ts`
+- [x] T093 Review audit metadata for sensitive data minimization in `src/domain/audit/audit-service.ts`
 - [x] T094 Update README setup and MVP operation notes in `README.md`
-- [ ] T095 Run final build, lint and test command set from `package.json`
+- [x] T095 Run final build, lint and test command set from `package.json`
 
 ## Dependencies & Execution Order
 

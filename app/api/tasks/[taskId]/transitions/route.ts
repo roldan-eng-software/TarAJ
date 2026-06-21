@@ -5,7 +5,7 @@ import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { validateTransition } from '@/src/domain/workflow/workflow-service';
 import { assertCanAccessTask } from '@/src/domain/rbac/rbac-service';
 import { recordStageChange, recordTaskCompletion } from '@/src/domain/history/history-service';
-import { logSuccess } from '@/src/domain/audit/audit-service';
+import { logSuccess, logDenied } from '@/src/domain/audit/audit-service';
 import { emitStageChangedAlert, emitTaskCompletedAlert } from '@/src/domain/notifications/notification-events';
 import { adminDb } from '@/src/firebase/admin';
 import type { StageId } from '@/src/types/domain';
@@ -14,18 +14,18 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> }
 ) {
+  const { taskId } = await params;
+  const token = request.headers.get('authorization')?.replace('Bearer ', '');
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const session = await getSessionUser(token);
+  if (!session) {
+    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  }
+
   try {
-    const { taskId } = await params;
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await getSessionUser(token);
-    if (!session) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { targetStageId } = body;
 
@@ -42,6 +42,11 @@ export async function POST(
 
     const validation = validateTransition(task.stageId, targetStageId);
     if (!validation.valid) {
+      await logDenied(session.uid, session.roleId, 'move', 'task', taskId, {
+        reason: validation.message || 'Invalid transition',
+        fromStage: task.stageId,
+        invalidTarget: targetStageId,
+      });
       return NextResponse.json(
         { error: validation.message || 'Invalid transition' },
         { status: 409 }
@@ -82,6 +87,9 @@ export async function POST(
   } catch (error: any) {
     console.error('Error transitioning task:', error);
     if (error?.message?.includes('cannot')) {
+      await logDenied(session.uid, session.roleId, 'move', 'task', taskId, {
+        reason: error.message,
+      });
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
     return NextResponse.json({ error: 'Failed to transition task' }, { status: 500 });

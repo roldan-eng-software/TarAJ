@@ -77,42 +77,46 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-1">Título</label>
+        <label htmlFor="task-title" className="block text-sm font-medium text-gray-900 mb-1">Título</label>
         <input
+          id="task-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-1">Descrição</label>
+        <label htmlFor="task-description" className="block text-sm font-medium text-gray-900 mb-1">Descrição</label>
         <textarea
+          id="task-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-900 mb-1">Categoria</label>
+          <label htmlFor="task-category" className="block text-sm font-medium text-gray-900 mb-1">Categoria</label>
           <input
+            id="task-category"
             type="text"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-900 mb-1">Prioridade</label>
+          <label htmlFor="task-priority" className="block text-sm font-medium text-gray-900 mb-1">Prioridade</label>
           <select
+            id="task-priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
           >
             <option value="baixa">Baixa</option>
             <option value="normal">Normal</option>
@@ -122,15 +126,16 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-1">Responsável</label>
+        <label htmlFor="task-responsible" className="block text-sm font-medium text-gray-900 mb-1">Responsável</label>
         {loadingUsers ? (
           <div className="text-xs text-gray-500 py-2">Carregando usuários...</div>
         ) : (
           <select
+            id="task-responsible"
             value={responsibleUserId}
             onChange={(e) => setResponsibleUserId(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
           >
             <option value="" disabled>Selecione um responsável</option>
             {users.map((user) => (
@@ -142,20 +147,22 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
         )}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-1">Prazo</label>
+        <label htmlFor="task-dueDate" className="block text-sm font-medium text-gray-900 mb-1">Prazo</label>
         <input
+          id="task-dueDate"
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-1">Confidencialidade</label>
+        <label htmlFor="task-confidentiality" className="block text-sm font-medium text-gray-900 mb-1">Confidencialidade</label>
         <select
+          id="task-confidentiality"
           value={confidentialityLevel}
           onChange={(e) => setConfidentialityLevel(e.target.value as TaskFormData['confidentialityLevel'])}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
         >
           <option value="interno">Interno</option>
           <option value="restrito">Restrito</option>
@@ -164,7 +171,7 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
       </div>
       <button
         type="submit"
-        className="w-full px-4 py-2 bg-sky-500 text-white text-sm font-medium rounded-lg hover:bg-sky-600 transition"
+        className="w-full px-4 py-2 bg-sky-500 text-white text-sm font-medium rounded-lg hover:bg-sky-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isEditing ? 'Atualizar' : 'Criar tarefa'}
       </button>

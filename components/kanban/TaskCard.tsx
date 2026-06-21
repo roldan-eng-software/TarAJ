@@ -26,7 +26,12 @@ export default function TaskCard({
   return (
     <div
       onClick={onClick}
-      className="bg-white p-3 rounded-lg border cursor-pointer hover:shadow-sm transition"
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } }}
+      tabIndex={0}
+      role="button"
+      aria-label={'Abrir tarefa: ' + title}
+      title={title}
+      className="bg-white p-3 rounded-lg border border-gray-200 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-transform focus-visible:ring-2 focus-visible:ring-sky-500"
     >
       <h3 className="font-medium text-sm text-gray-900 truncate">{title}</h3>
       <div className="flex items-center gap-2 mt-2">

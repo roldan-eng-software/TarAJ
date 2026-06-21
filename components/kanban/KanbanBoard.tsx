@@ -127,7 +127,7 @@ export default function KanbanBoard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-[60vh]" role="status" aria-live="polite">
         <p className="text-gray-500 text-lg">Carregando quadro...</p>
       </div>
     );
@@ -135,7 +135,7 @@ export default function KanbanBoard() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-[60vh]" role="alert">
         <div className="text-center">
           <p className="text-red-500 text-lg mb-4">{error}</p>
           <button
@@ -167,11 +167,13 @@ export default function KanbanBoard() {
           return (
             <div
               key={stage.id}
+              role="region"
+              aria-labelledby={stage.id + '-heading'}
               className="flex-shrink-0 w-72 bg-gray-100 rounded-lg"
             >
               <div className="px-3 py-2 border-b border-gray-200">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-semibold text-sm text-gray-900">
+                  <h3 id={stage.id + '-heading'} className="font-semibold text-sm text-gray-900">
                     {stage.label}
                   </h3>
                   <span className="text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full">
@@ -203,7 +205,7 @@ export default function KanbanBoard() {
                       />
                     </div>
 
-                    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition">
+                    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition">
                       <select
                         value=""
                         onChange={(e) => {
@@ -232,13 +234,17 @@ export default function KanbanBoard() {
       </div>
 
       {showCreateForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowCreateForm(false); }}
+        >
           <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-900">Nova tarefa</h2>
               <button
                 onClick={() => setShowCreateForm(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                aria-label="Fechar"
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded"
               >
                 &times;
               </button>

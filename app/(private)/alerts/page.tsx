@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { LoadingState, EmptyState } from '@/components/ui/StateViews';
 import type { Alert } from '@/src/types/domain';
 
 function getToken(): string | undefined {
@@ -97,11 +98,11 @@ export default function AlertsPage() {
   };
 
   if (loading) {
-    return <div className="p-6 text-center text-gray-500">Carregando...</div>;
+    return <LoadingState message="Carregando..." />;
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Alertas</h1>
@@ -114,25 +115,24 @@ export default function AlertsPage() {
         {unreadCount > 0 && (
           <button
             onClick={handleMarkAllAsRead}
-            className="px-4 py-2 text-sm font-medium text-sky-600 hover:text-sky-700"
+            className="px-4 py-2 text-sm font-medium text-sky-600 hover:text-sky-700 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 rounded"
           >
             Marcar todos como lido
           </button>
         )}
       </div>
 
-      {error && <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg">{error}</div>}
+      {error && <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg" role="alert">{error}</div>}
 
       {alerts.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <p>Nenhum alerta ainda.</p>
-        </div>
+        <EmptyState message="Nenhum alerta ainda." />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3" role="list">
           {alerts.map((alert) => (
             <div
               key={alert.id}
-              className={`p-4 rounded-lg border ${
+              role="listitem"
+              className={`p-4 rounded-lg border hover:shadow-sm transition ${
                 !alert.readAt
                   ? 'bg-sky-50 border-sky-200'
                   : 'bg-gray-50 border-gray-200'
@@ -151,7 +151,7 @@ export default function AlertsPage() {
                 {!alert.readAt && (
                   <button
                     onClick={() => handleMarkAsRead(alert.id)}
-                    className="ml-4 text-sm text-sky-600 hover:text-sky-700 font-medium"
+                    className="ml-4 text-sm text-sky-600 hover:text-sky-700 font-medium focus-visible:ring-2 focus-visible:ring-sky-500 rounded"
                   >
                     Marcar como lido
                   </button>

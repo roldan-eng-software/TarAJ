@@ -49,7 +49,6 @@ export async function createTask(
   // Record audit
   await logSuccess(creator.uid, creator.roleId, 'create', 'task', task.id, {
     referenceCode,
-    title: task.title,
   });
 
   // Emit notification for responsible user
