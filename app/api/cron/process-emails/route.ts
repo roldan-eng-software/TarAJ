@@ -23,7 +23,10 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Cron email processing failed:', error);
-    return NextResponse.json({ error: 'Processing failed' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Processing failed',
+      detail: error instanceof Error ? error.message : String(error),
+    }, { status: 500 });
   }
 }
 
@@ -47,6 +50,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Cron email processing failed:', error);
-    return NextResponse.json({ error: 'Processing failed' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Processing failed',
+      detail: error instanceof Error ? error.message : String(error),
+    }, { status: 500 });
   }
 }
