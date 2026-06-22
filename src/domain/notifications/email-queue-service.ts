@@ -50,17 +50,18 @@ export async function getPendingEmails(limit: number = 50): Promise<EmailJob[]> 
   const snapshot = await adminDb
     .collection('emailQueue')
     .where('status', '==', 'pending')
-    .where('attempts', '<', 3)
-    .orderBy('createdAt', 'asc')
-    .limit(limit)
     .get();
 
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data().createdAt.toDate(),
-    sentAt: doc.data().sentAt?.toDate(),
-  })) as EmailJob[];
+  return snapshot.docs
+    .map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt.toDate(),
+      sentAt: doc.data().sentAt?.toDate(),
+    })) as EmailJob[]
+    .filter((job) => job.attempts < 3)
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    .slice(0, limit);
 }
 
 /**
@@ -112,11 +113,12 @@ export async function countPendingEmails(): Promise<number> {
   const snapshot = await adminDb
     .collection('emailQueue')
     .where('status', '==', 'pending')
-    .where('attempts', '<', 3)
-    .count()
     .get();
 
-  return snapshot.data().count;
+  return snapshot.docs.filter((doc) => {
+    const data = doc.data();
+    return (data.attempts || 0) < 3;
+  }).length;
 }
 
 /**
