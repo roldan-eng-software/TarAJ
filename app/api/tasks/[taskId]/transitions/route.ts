@@ -4,7 +4,7 @@ import { getTask } from '@/src/domain/tasks/task-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { validateTransition } from '@/src/domain/workflow/workflow-service';
 import { assertCanAccessTask } from '@/src/domain/rbac/rbac-service';
-import { recordStageChange, recordTaskCompletion } from '@/src/domain/history/history-service';
+import { recordStageChange } from '@/src/domain/history/history-service';
 import { logSuccess, logDenied } from '@/src/domain/audit/audit-service';
 import { emitStageChangedAlert, emitTaskCompletedAlert } from '@/src/domain/notifications/notification-events';
 import { adminDb } from '@/src/firebase/admin';
@@ -72,7 +72,6 @@ export async function POST(
     const updatedTask = await getTask(taskId);
     if (updatedTask) {
       if (targetStageId === 'concluida') {
-        await recordTaskCompletion(taskId, session.uid, session.roleId);
         await emitTaskCompletedAlert(updatedTask, session);
       } else {
         await emitStageChangedAlert(updatedTask, previousStage as StageId, targetStageId as StageId, session);

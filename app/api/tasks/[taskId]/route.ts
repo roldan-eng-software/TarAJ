@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getTask, updateTask } from '@/src/domain/tasks/task-service';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
+import { getTaskHistory } from '@/src/domain/history/history-service';
 
 export async function GET(
   request: NextRequest,
@@ -24,7 +25,8 @@ export async function GET(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    return NextResponse.json(task);
+    const history = await getTaskHistory(taskId);
+    return NextResponse.json({ ...task, history });
   } catch (error) {
     console.error('Error fetching task:', error);
     return NextResponse.json({ error: 'Failed to fetch task' }, { status: 500 });

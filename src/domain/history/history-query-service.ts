@@ -12,7 +12,7 @@ export async function getTaskHistory(taskId: string): Promise<TaskHistory[]> {
     .collection('tasks')
     .doc(taskId)
     .collection('history')
-    .orderBy('createdAt', 'desc')
+    .orderBy('occurredAt', 'desc')
     .get();
 
   return snapshot.docs.map((doc) => {
@@ -26,7 +26,7 @@ export async function getTaskHistory(taskId: string): Promise<TaskHistory[]> {
       previousValue: data.previousValue,
       newValue: data.newValue,
       metadata: data.metadata,
-      occurredAt: (data.createdAt || data.occurredAt)?.toDate() || new Date(),
+      occurredAt: data.occurredAt?.toDate() || new Date(),
     } as TaskHistory;
   });
 }
@@ -40,7 +40,7 @@ export async function getTaskHistoryByType(
     .doc(taskId)
     .collection('history')
     .where('eventType', '==', eventType)
-    .orderBy('createdAt', 'desc')
+    .orderBy('occurredAt', 'desc')
     .get();
 
   return snapshot.docs.map((doc) => {
@@ -54,7 +54,7 @@ export async function getTaskHistoryByType(
       previousValue: data.previousValue,
       newValue: data.newValue,
       metadata: data.metadata,
-      occurredAt: (data.createdAt || data.occurredAt)?.toDate() || new Date(),
+      occurredAt: data.occurredAt?.toDate() || new Date(),
     } as TaskHistory;
   });
 }
@@ -67,7 +67,7 @@ export async function getRecentTaskHistory(
     .collection('tasks')
     .doc(taskId)
     .collection('history')
-    .orderBy('createdAt', 'desc')
+    .orderBy('occurredAt', 'desc')
     .limit(limit)
     .get();
 
@@ -83,7 +83,7 @@ export async function getRecentTaskHistory(
         previousValue: data.previousValue,
         newValue: data.newValue,
         metadata: data.metadata,
-        occurredAt: (data.createdAt || data.occurredAt)?.toDate() || new Date(),
+        occurredAt: data.occurredAt?.toDate() || new Date(),
       } as TaskHistory;
     })
     .reverse();
@@ -97,8 +97,8 @@ export async function getTaskHistoryByActor(
     .collection('tasks')
     .doc(taskId)
     .collection('history')
-    .where('createdBy', '==', actorId)
-    .orderBy('createdAt', 'desc')
+    .where('actor', '==', actorId)
+    .orderBy('occurredAt', 'desc')
     .get();
 
   return snapshot.docs.map((doc) => {
@@ -112,7 +112,7 @@ export async function getTaskHistoryByActor(
       previousValue: data.previousValue,
       newValue: data.newValue,
       metadata: data.metadata,
-      occurredAt: (data.createdAt || data.occurredAt)?.toDate() || new Date(),
+      occurredAt: data.occurredAt?.toDate() || new Date(),
     } as TaskHistory;
   });
 }

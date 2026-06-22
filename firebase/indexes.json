@@ -187,15 +187,15 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "eventType", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": "occurredAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "history",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "createdBy", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": "actor", "order": "ASCENDING" },
+        { "fieldPath": "occurredAt", "order": "DESCENDING" }
       ]
     },
     {
