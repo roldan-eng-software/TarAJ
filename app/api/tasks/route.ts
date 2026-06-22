@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const responsibleUserId = searchParams.get('responsibleUserId');
     const priority = searchParams.get('priority');
     const category = searchParams.get('category');
+    const dueDateStatus = searchParams.get('dueDateStatus') as 'upcoming' | 'overdue' | null;
     const q = searchParams.get('q');
     const limit = parseInt(searchParams.get('limit') || '50');
 
@@ -40,6 +41,7 @@ export async function GET(request: NextRequest) {
     if (responsibleUserId) filters.responsibleUserId = responsibleUserId;
     if (priority) filters.priority = priority;
     if (category) filters.category = category;
+    if (dueDateStatus) filters.dueDateStatus = dueDateStatus;
 
     const tasks = await listTasks(filters as any, limit);
 

@@ -89,6 +89,7 @@ export async function listTasks(
     priority?: string;
     archived?: boolean;
     category?: string;
+    dueDateStatus?: 'upcoming' | 'overdue';
   },
   limit: number = 50
 ): Promise<Task[]> {
@@ -119,7 +120,7 @@ export async function listTasks(
     .limit(limit)
     .get();
 
-  return snapshot.docs.map((doc) => {
+  let tasks = snapshot.docs.map((doc) => {
     const data = doc.data();
     return {
       id: doc.id,
@@ -131,6 +132,25 @@ export async function listTasks(
       archivedAt: data.archivedAt?.toDate?.() ?? data.archivedAt,
     } as Task;
   });
+
+  if (filters?.dueDateStatus === 'upcoming') {
+    const now = new Date();
+    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    tasks = tasks.filter((t) => {
+      if (!t.dueDate || t.completedAt) return false;
+      return t.dueDate > now && t.dueDate <= threeDaysFromNow;
+    });
+  }
+
+  if (filters?.dueDateStatus === 'overdue') {
+    const now = new Date();
+    tasks = tasks.filter((t) => {
+      if (!t.dueDate || t.completedAt) return false;
+      return t.dueDate < now;
+    });
+  }
+
+  return tasks;
 }
 
 /**

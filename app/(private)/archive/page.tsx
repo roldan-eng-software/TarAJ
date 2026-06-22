@@ -4,26 +4,25 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { LoadingState, EmptyState } from '@/components/ui/StateViews';
 import Pagination from '@/components/ui/Pagination';
+import TaskFilters from '@/components/tasks/TaskFilters';
 import type { Task } from '@/src/types/domain';
 
 const ITEMS_PER_PAGE = 12;
 
 export default function ArchivePage() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [filterParams, setFilterParams] = useState<Record<string, string>>({});
 
   const fetchArchivedTasks = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams();
-      if (searchTerm) params.set('q', searchTerm);
-
-      const res = await fetch(`/api/tasks?archived=true&limit=200&${params.toString()}`, {
+      const params = new URLSearchParams({ archived: 'true', limit: '200', ...filterParams });
+      const res = await fetch(`/api/tasks?${params.toString()}`, {
         credentials: 'include',
       });
 
@@ -31,25 +30,21 @@ export default function ArchivePage() {
 
       const data = await res.json();
       setTasks(data.tasks || data || []);
+      setPage(1);
     } catch (err) {
       setError('Falha ao carregar tarefas arquivadas');
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [searchTerm]);
+  }, [filterParams]);
 
   useEffect(() => {
     fetchArchivedTasks();
   }, [fetchArchivedTasks]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [searchTerm]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchArchivedTasks();
+  const handleFilter = (params: Record<string, string>) => {
+    setFilterParams(params);
   };
 
   const totalPages = Math.max(1, Math.ceil(tasks.length / ITEMS_PER_PAGE));
@@ -66,15 +61,7 @@ export default function ArchivePage() {
     <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Tarefas Arquivadas</h1>
 
-      <form onSubmit={handleSearch} className="mb-6">
-        <input
-          type="text"
-          placeholder="Buscar por título, descrição ou código..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500"
-        />
-      </form>
+      <TaskFilters onFilter={handleFilter} showStage showArchived />
 
       {error && <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg">{error}</div>}
 

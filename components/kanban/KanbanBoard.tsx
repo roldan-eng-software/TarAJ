@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import TaskCard from '@/components/kanban/TaskCard';
 import TaskForm from '@/components/tasks/TaskForm';
+import TaskFilters from '@/components/tasks/TaskFilters';
 import type { Task } from '@/src/types/domain';
 import type { TaskFormData } from '@/components/tasks/TaskForm';
 
@@ -26,12 +27,15 @@ export default function KanbanBoard() {
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [movingTaskId, setMovingTaskId] = useState<string | null>(null);
+  const [filterParams, setFilterParams] = useState<Record<string, string>>({});
+  const [mobileStage, setMobileStage] = useState<StageId>('entrada');
 
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/tasks?archived=false&limit=100', {
+      const params = new URLSearchParams({ archived: 'false', limit: '100', ...filterParams });
+      const res = await fetch(`/api/tasks?${params.toString()}`, {
         credentials: 'include',
       });
 
@@ -75,6 +79,10 @@ export default function KanbanBoard() {
     fetchTasks();
     fetchUsers();
   }, [fetchTasks, fetchUsers]);
+
+  const handleFilter = (params: Record<string, string>) => {
+    setFilterParams(params);
+  };
 
   const handleMove = async (taskId: string, targetStageId: StageId) => {
     try {
@@ -158,13 +166,65 @@ export default function KanbanBoard() {
         <h1 className="text-3xl font-bold text-gray-900">Kanban</h1>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="px-4 py-2 bg-sky-500 text-white text-sm font-medium rounded-lg hover:bg-sky-600 transition"
+          className="px-4 py-2 bg-sky-500 text-white text-sm font-medium rounded-lg hover:bg-sky-600 transition cursor-pointer"
         >
           + Nova tarefa
         </button>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <TaskFilters onFilter={handleFilter} showStage />
+
+      {/* Mobile: stage selector + vertical list */}
+      <div className="md:hidden mb-4">
+        <select
+          value={mobileStage}
+          onChange={(e) => setMobileStage(e.target.value as StageId)}
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-sky-500"
+        >
+          {STAGES.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.label} ({getTasksByStage(s.id).length})
+            </option>
+          ))}
+        </select>
+
+        <div className="mt-3 space-y-2">
+          {getTasksByStage(mobileStage).length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-8">Nenhuma tarefa neste estágio</p>
+          )}
+          {getTasksByStage(mobileStage).map((task) => (
+            <div key={task.id} className="relative">
+              <div onClick={() => router.push(`/tasks/${task.id}`)} className="cursor-pointer">
+                <TaskCard
+                  taskId={task.id}
+                  title={task.title}
+                  priority={task.priority}
+                  responsibleUserId={task.responsibleUserId}
+                  responsiblePersonName={users[task.responsibleUserId]}
+                  dueDate={task.dueDate}
+                  stageId={task.stageId}
+                />
+              </div>
+              <div className="absolute top-2 right-2">
+                <select
+                  value=""
+                  onChange={(e) => { const val = e.target.value; if (val) handleMove(task.id, val as StageId); }}
+                  disabled={movingTaskId === task.id}
+                  className="text-xs border border-gray-300 rounded bg-white px-1 py-0.5 shadow-sm"
+                >
+                  <option value="" disabled>Mover para...</option>
+                  {getAvailableTargets(mobileStage).map((target) => (
+                    <option key={target.id} value={target.id}>{target.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: horizontal scroll columns */}
+      <div className="hidden md:flex gap-4 overflow-x-auto pb-4">
         {STAGES.map((stage) => {
           const stageTasks = getTasksByStage(stage.id);
           return (

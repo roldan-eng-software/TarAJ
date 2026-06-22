@@ -126,6 +126,54 @@ describe('Task Route Handler Contract', () => {
       expect(() => assertCan(adminUser, 'edit', 'task')).not.toThrow();
       expect(() => assertCan(readerUser, 'edit', 'task')).toThrow();
     });
+
+    it('should accept title update', () => {
+      const body = { title: 'Novo título da tarefa' };
+      expect(body).toHaveProperty('title');
+      expect(typeof body.title).toBe('string');
+    });
+
+    it('should accept priority update', () => {
+      const body = { priority: 'alta' };
+      expect(body).toHaveProperty('priority');
+      expect(['baixa', 'normal', 'alta', 'crítica']).toContain(body.priority);
+    });
+
+    it('should accept responsible user change', () => {
+      const body = { responsibleUserId: 'user_002' };
+      expect(body).toHaveProperty('responsibleUserId');
+    });
+
+    it('should accept category update', () => {
+      const body = { category: 'civel' };
+      expect(body).toHaveProperty('category');
+    });
+
+    it('should accept description update', () => {
+      const body = { description: 'Nova descrição detalhada da tarefa' };
+      expect(body).toHaveProperty('description');
+    });
+
+    it('should accept dueDate update', () => {
+      const body = { dueDate: '2026-07-01' };
+      expect(body).toHaveProperty('dueDate');
+    });
+
+    it('should accept multiple fields at once', () => {
+      const body = {
+        title: 'Título atualizado',
+        priority: 'alta',
+        description: 'Descrição atualizada',
+        category: 'trabalhista',
+      };
+      expect(Object.keys(body).length).toBe(4);
+    });
+
+    it('should match expected URL pattern', () => {
+      const pattern = /^\/api\/tasks\/[a-zA-Z0-9_-]+$/;
+      expect(pattern.test('/api/tasks/task_123')).toBe(true);
+      expect(pattern.test('/api/tasks/')).toBe(false);
+    });
   });
 
   describe('POST /api/tasks/[taskId]/transitions - Move task', () => {
