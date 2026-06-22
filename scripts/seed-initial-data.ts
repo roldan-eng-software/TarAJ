@@ -100,6 +100,45 @@ async function seedDatabase() {
       console.log(`✓ Created stage: ${stage.name}`);
     }
 
+    // Seed default categories
+    const INITIAL_CATEGORIES = [
+      { name: 'Contratos', order: 1 },
+      { name: 'Litígios', order: 2 },
+      { name: 'Regulatório', order: 3 },
+      { name: 'Societário', order: 4 },
+      { name: 'Trabalhista', order: 5 },
+      { name: 'Tributário', order: 6 },
+      { name: 'Consultivo', order: 7 },
+      { name: 'Compliance', order: 8 },
+      { name: 'Propriedade Intelectual', order: 9 },
+      { name: 'Família / Sucessões', order: 10 },
+      { name: 'Consumidor', order: 11 },
+      { name: 'Imobiliário', order: 12 },
+    ];
+
+    for (const cat of INITIAL_CATEGORIES) {
+      const slug = cat.name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '');
+
+      const existing = await adminDb.collection('taskCategories').doc(slug).get();
+      if (!existing.exists) {
+        await adminDb.collection('taskCategories').doc(slug).set({
+          name: cat.name,
+          slug,
+          order: cat.order,
+          active: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: 'seed-script',
+        });
+        console.log(`✓ Created category: ${cat.name}`);
+      }
+    }
+
     // Seed default alert configs
     const alertConfigsSeeded = await seedDefaultAlertConfigs('seed-script');
     console.log(`✓ Created ${alertConfigsSeeded} default alert configurations`);

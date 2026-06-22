@@ -82,7 +82,7 @@ export default function PrivateLayout({
     { href: '/alerts', label: 'Alertas', showBadge: true },
     { href: '/archive', label: 'Arquivo' },
     { href: '/settings', label: 'Config' },
-    ...(isAdmin ? [{ href: '/admin/users', label: 'Usuários' }, { href: '/admin/alert-settings', label: 'Alertas' }] : []),
+    ...(isAdmin ? [{ href: '/admin/users', label: 'Usuários' }, { href: '/admin/alert-settings', label: 'Alertas' }, { href: '/admin/categories', label: 'Categorias' }] : []),
   ];
 
   const handleLogout = () => {

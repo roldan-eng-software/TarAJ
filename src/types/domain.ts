@@ -220,6 +220,16 @@ export interface StageAlertConfig {
   updatedBy: string;
 }
 
+export interface TaskCategory {
+  id: string;
+  name: string;
+  slug: string;
+  order: number;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface EmailJob {
   id: string;
   recipientEmail: string;

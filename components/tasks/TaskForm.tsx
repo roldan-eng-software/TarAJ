@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { TaskCategory } from '@/src/types/domain';
 
 interface TaskFormProps {
   onSubmit?: (data: TaskFormData) => void;
@@ -30,9 +31,11 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
   const [confidentialityLevel, setConfidentialityLevel] = useState(initialData?.confidentialityLevel || 'interno');
   const [users, setUsers] = useState<{ id: string; displayName: string; email: string }[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [categories, setCategories] = useState<TaskCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchInitialData = async () => {
       try {
         const token = document.cookie
           .split('; ')
@@ -40,24 +43,33 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
           ?.split('=')[1];
 
         const headers: HeadersInit = token ? { authorization: `Bearer ${token}` } : {};
-        const res = await fetch('/api/users', { headers });
 
-        if (res.ok) {
-          const data = await res.json();
+        const [usersRes, categoriesRes] = await Promise.all([
+          fetch('/api/users', { headers }),
+          fetch('/api/categories', { headers }),
+        ]);
+
+        if (usersRes.ok) {
+          const data = await usersRes.json();
           setUsers(data.users || []);
-          // Auto-select first user if none selected
           if (!responsibleUserId && data.users?.length > 0) {
             setResponsibleUserId(data.users[0].id);
           }
         }
+
+        if (categoriesRes.ok) {
+          const data = await categoriesRes.json();
+          setCategories(data.categories || []);
+        }
       } catch (err) {
-        console.error('Failed to load users for selector', err);
+        console.error('Failed to load initial data', err);
       } finally {
         setLoadingUsers(false);
+        setLoadingCategories(false);
       }
     };
 
-    fetchUsers();
+    fetchInitialData();
   }, [responsibleUserId]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -101,14 +113,24 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="task-category" className="block text-sm font-medium text-gray-900 mb-1">Categoria</label>
-          <input
-            id="task-category"
-            type="text"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-          />
+          {loadingCategories ? (
+            <div className="text-xs text-gray-500 py-2">Carregando categorias...</div>
+          ) : (
+            <select
+              id="task-category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            >
+              <option value="" disabled>Selecione uma categoria</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.slug}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
         <div>
           <label htmlFor="task-priority" className="block text-sm font-medium text-gray-900 mb-1">Prioridade</label>

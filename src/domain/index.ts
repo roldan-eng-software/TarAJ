@@ -13,3 +13,4 @@ export { queueEmail, getPendingEmails, updateEmailJobStatus, processPendingEmail
 export { alertUpcomingDueTasks, alertOverdueTasks, runDueDateCheck } from '@/src/domain/notifications/due-date-service';
 export { extractMentions, createComment, getTaskComments, getUserComments, countTaskComments } from '@/src/domain/comments/comment-service';
 export { uploadAttachment, getAttachment, getTaskAttachments, getDownloadUrl, deleteAttachment, countTaskAttachments } from '@/src/domain/attachments/attachment-service';
+export { getAllCategories, getActiveCategories, createCategory, updateCategory, deleteCategory } from '@/src/domain/categories/category-service';
