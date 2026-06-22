@@ -1,0 +1,26 @@
+name: Cron Diário
+on:
+  schedule:
+    - cron: '0 8 * * *'
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Due-date check
+        run: |
+          curl -sS -X POST \
+            "https://${{ vars.VERCEL_URL || vars.APP_URL }}/api/cron/due-date-check" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+
+      - name: Process email queue
+        run: |
+          curl -sS -X POST \
+            "https://${{ vars.VERCEL_URL || vars.APP_URL }}/api/cron/process-emails" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+
+      - name: Cleanup old data
+        run: |
+          curl -sS -X POST \
+            "https://${{ vars.VERCEL_URL || vars.APP_URL }}/api/cron/cleanup" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

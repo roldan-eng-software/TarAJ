@@ -4,8 +4,15 @@ import {
   cleanupOldEmailJobs,
 } from '@/src/domain/notifications/email-queue-service';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const cronSecret = process.env.CRON_SECRET;
+    const authHeader = request.headers.get('authorization')?.replace('Bearer ', '');
+
+    if (cronSecret && authHeader !== cronSecret) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const processed = await processPendingEmails(50);
     const cleaned = await cleanupOldEmailJobs(30);
 

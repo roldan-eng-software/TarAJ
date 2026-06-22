@@ -1,14 +1,10 @@
-// Due Date Service (T060)
-// Scans for upcoming and overdue tasks
-
 import { adminDb } from '@/src/firebase/admin';
 import { createAlert } from '@/src/domain/notifications/notification-service';
+import { sendEmail } from '@/src/domain/notifications/email-sender';
 import { queueEmail } from '@/src/domain/notifications/email-queue-service';
-import type { Task } from '@/src/types/domain';
+import { getRecipientsForEvent } from '@/src/domain/notifications/alert-config-service';
+import type { Task, StageId } from '@/src/types/domain';
 
-/**
- * Find tasks due within N days
- */
 export async function getUpcomingDueTasks(daysAhead: number = 3): Promise<Task[]> {
   const now = new Date();
   const futureDate = new Date();
@@ -30,9 +26,6 @@ export async function getUpcomingDueTasks(daysAhead: number = 3): Promise<Task[]
   })) as Task[];
 }
 
-/**
- * Find overdue tasks
- */
 export async function getOverdueTasks(): Promise<Task[]> {
   const now = new Date();
 
@@ -72,6 +65,10 @@ function buildAlertMessage(taskTitle: string, daysUntilDue: number): string {
   return `Tarefa "${taskTitle}" vence em ${daysUntilDue} dias`;
 }
 
+function buildOverdueMessage(taskTitle: string, daysSinceDue: number): string {
+  return `Tarefa "${taskTitle}" está vencida há ${daysSinceDue} dias`;
+}
+
 function buildEmailSubject(taskTitle: string, daysUntilDue: number): string {
   if (daysUntilDue === 1) {
     return `[TarAJ] Vence amanhã: ${taskTitle}`;
@@ -79,97 +76,113 @@ function buildEmailSubject(taskTitle: string, daysUntilDue: number): string {
   return `[TarAJ] Vence em ${daysUntilDue} dias: ${taskTitle}`;
 }
 
-/**
- * Create due-date alerts for upcoming tasks
- */
+async function notifyRecipient(
+  userId: string,
+  eventType: 'due_upcoming' | 'due_overdue',
+  taskId: string,
+  message: string,
+  emailSubject: string,
+  emailBody: string,
+  emailHtml: string,
+  metadata: Record<string, unknown>
+): Promise<void> {
+  await createAlert(eventType, taskId, userId, 'Sistema', message, metadata);
+
+  const info = await getRecipientInfo(userId);
+  if (info) {
+    try {
+      await sendEmail({
+        to: info.email,
+        subject: emailSubject,
+        text: emailBody,
+        html: emailHtml,
+      });
+    } catch {
+      await queueEmail(info.email, info.displayName, emailSubject, emailBody, emailHtml, {
+        ...metadata,
+        taskId,
+        eventType,
+      });
+    }
+  }
+}
+
 export async function alertUpcomingDueTasks(daysAhead: number = 3): Promise<number> {
   const tasks = await getUpcomingDueTasks(daysAhead);
   let alertCount = 0;
 
   for (const task of tasks) {
-    if (task.responsibleUserId && task.dueDate) {
-      const daysUntilDue = Math.ceil(
-        (task.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    if (!task.dueDate) continue;
+
+    const daysUntilDue = Math.ceil(
+      (task.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (daysUntilDue < 1 || daysUntilDue > daysAhead) continue;
+
+    const message = buildAlertMessage(task.title, daysUntilDue);
+    const recipients = await getRecipientsForEvent(
+      task.stageId as StageId,
+      'due_upcoming',
+      task
+    );
+
+    for (const { userId } of recipients) {
+      await notifyRecipient(
+        userId,
+        'due_upcoming',
+        task.id,
+        message,
+        buildEmailSubject(task.title, daysUntilDue),
+        `${message}.`,
+        `<p>${message}.</p>`,
+        { taskId: task.id, daysUntil: daysUntilDue }
       );
-
-      if (daysUntilDue >= 1 && daysUntilDue <= daysAhead) {
-        const message = buildAlertMessage(task.title, daysUntilDue);
-
-        await createAlert(
-          'due_upcoming',
-          task.id,
-          task.responsibleUserId,
-          'Sistema',
-          message,
-          { taskId: task.id, daysUntil: daysUntilDue }
-        );
-        alertCount++;
-
-        const recipient = await getRecipientInfo(task.responsibleUserId);
-        if (recipient) {
-          await queueEmail(
-            recipient.email,
-            recipient.displayName,
-            buildEmailSubject(task.title, daysUntilDue),
-            `${message}.`,
-            `<p>${message}.</p>`,
-            { taskId: task.id, eventType: 'due_upcoming', daysUntil: daysUntilDue }
-          );
-        }
-      }
+      alertCount++;
     }
   }
 
   return alertCount;
 }
 
-/**
- * Create alerts for overdue tasks
- */
 export async function alertOverdueTasks(): Promise<number> {
   const tasks = await getOverdueTasks();
   let alertCount = 0;
 
   for (const task of tasks) {
-    if (task.responsibleUserId && task.dueDate) {
-      const daysSinceDue = Math.ceil(
-        (new Date().getTime() - task.dueDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
+    if (!task.dueDate) continue;
 
-      await createAlert(
+    const daysSinceDue = Math.ceil(
+      (new Date().getTime() - task.dueDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    const message = buildOverdueMessage(task.title, daysSinceDue);
+    const recipients = await getRecipientsForEvent(
+      task.stageId as StageId,
+      'due_overdue',
+      task
+    );
+
+    for (const { userId } of recipients) {
+      await notifyRecipient(
+        userId,
         'due_overdue',
         task.id,
-        task.responsibleUserId,
-        'Sistema',
-        `Tarefa "${task.title}" está vencida há ${daysSinceDue} dias`,
+        message,
+        `[TarAJ] Vencida: ${task.title}`,
+        `${message}.`,
+        `<p>${message}.</p>`,
         { taskId: task.id, daysSinceDue }
       );
       alertCount++;
-
-      const recipient = await getRecipientInfo(task.responsibleUserId);
-      if (recipient) {
-        await queueEmail(
-          recipient.email,
-          recipient.displayName,
-          `[TarAJ] Vencida: ${task.title}`,
-          `A tarefa "${task.title}" está vencida há ${daysSinceDue} dias.`,
-          `<p>A tarefa <strong>"${task.title}"</strong> está vencida há ${daysSinceDue} dias.</p>`,
-          { taskId: task.id, eventType: 'due_overdue', daysSinceDue }
-        );
-      }
     }
   }
 
   return alertCount;
 }
 
-/**
- * Run all due-date scanning and alerting
- * Call this periodically from a scheduled job
- */
 export async function runDueDateCheck(): Promise<{ upcoming: number; overdue: number }> {
   const upcoming = await alertUpcomingDueTasks(3);
   const overdue = await alertOverdueTasks();
-
   return { upcoming, overdue };
 }

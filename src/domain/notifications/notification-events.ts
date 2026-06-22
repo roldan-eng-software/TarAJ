@@ -1,4 +1,5 @@
 import { createAlert } from '@/src/domain/notifications/notification-service';
+import { sendEmail } from '@/src/domain/notifications/email-sender';
 import { queueEmail } from '@/src/domain/notifications/email-queue-service';
 import { getRecipientsForEvent } from '@/src/domain/notifications/alert-config-service';
 import { isBackwardTransition, getStageName } from '@/src/domain/workflow/workflow-service';
@@ -44,14 +45,23 @@ async function notifyRecipients(
 
     const info = await resolveRecipientInfo(userId);
     if (info) {
-      await queueEmail(
-        info.email,
-        info.displayName,
-        emailSubject,
-        emailBody,
-        emailHtml,
-        { ...metadata, taskId: task.id, eventType }
-      );
+      try {
+        await sendEmail({
+          to: info.email,
+          subject: emailSubject,
+          text: emailBody,
+          html: emailHtml,
+        });
+      } catch {
+        await queueEmail(
+          info.email,
+          info.displayName,
+          emailSubject,
+          emailBody,
+          emailHtml,
+          { ...metadata, taskId: task.id, eventType }
+        );
+      }
     }
   }
 }
