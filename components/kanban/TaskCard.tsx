@@ -5,6 +5,7 @@ interface TaskCardProps {
   title: string;
   priority: string;
   responsibleUserId: string;
+  responsiblePersonName?: string;
   dueDate?: Date;
   stageId: string;
   onClick?: () => void;
@@ -13,6 +14,7 @@ interface TaskCardProps {
 export default function TaskCard({
   title,
   priority,
+  responsiblePersonName,
   dueDate,
   onClick,
 }: TaskCardProps) {
@@ -39,6 +41,11 @@ export default function TaskCard({
           {priority}
         </span>
       </div>
+      {responsiblePersonName && (
+        <p className="text-xs text-gray-600 mt-2 truncate">
+          👤 {responsiblePersonName}
+        </p>
+      )}
       {dueDate && (
         <p className="text-xs text-gray-500 mt-2">
           {new Date(dueDate).toLocaleDateString('pt-BR')}

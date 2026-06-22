@@ -28,6 +28,7 @@ function getToken(): string | undefined {
 export default function KanbanBoard() {
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [users, setUsers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -61,9 +62,28 @@ export default function KanbanBoard() {
     }
   }, [router]);
 
+  const fetchUsers = useCallback(async () => {
+    try {
+      const token = getToken();
+      const headers: HeadersInit = token ? { authorization: `Bearer ${token}` } : {};
+      const res = await fetch('/api/users', { headers });
+      if (res.ok) {
+        const data = await res.json();
+        const map: Record<string, string> = {};
+        (data.users || []).forEach((u: { id: string; displayName: string }) => {
+          map[u.id] = u.displayName;
+        });
+        setUsers(map);
+      }
+    } catch (err) {
+      console.error('Failed to load users', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchTasks();
-  }, [fetchTasks]);
+    fetchUsers();
+  }, [fetchTasks, fetchUsers]);
 
   const handleMove = async (taskId: string, targetStageId: StageId) => {
     try {
@@ -200,6 +220,7 @@ export default function KanbanBoard() {
                         title={task.title}
                         priority={task.priority}
                         responsibleUserId={task.responsibleUserId}
+                        responsiblePersonName={users[task.responsibleUserId]}
                         dueDate={task.dueDate}
                         stageId={task.stageId}
                       />
