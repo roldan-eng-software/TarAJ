@@ -21,17 +21,10 @@ export default function TaskComments({ taskId, comments = [] }: TaskCommentsProp
       setIsSubmitting(true);
       setError(null);
 
-      const token = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('token='))
-        ?.split('=')[1];
-
       const res = await fetch(`/api/tasks/${taskId}/comments`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ content: newComment }),
       });
 

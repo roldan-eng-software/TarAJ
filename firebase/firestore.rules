@@ -30,10 +30,10 @@ service cloud.firestore {
       allow update: if request.auth != null && canAccessTask(request.auth.uid, taskId) && !isArchivedWriteOnly();
       allow delete: if false; // Prevent task deletion; use archiving instead
 
-      // Task history subcollection: append-only
+      // Task history subcollection: server-side only writes
       match /history/{historyId} {
         allow read: if request.auth != null && canAccessTask(request.auth.uid, resource.data.taskId);
-        allow create: if request.auth != null && request.resource.data.createdBy == request.auth.uid;
+        allow create: if false; // Server-side only via Admin SDK
         allow update, delete: if false;
       }
 
@@ -53,18 +53,18 @@ service cloud.firestore {
       }
     }
 
-    // Alerts collection
+    // Alerts collection: server-side only writes
     match /alerts/{alertId} {
       allow read: if request.auth != null && resource.data.recipientId == request.auth.uid;
-      allow create: if request.auth != null; // Created by server-side functions
+      allow create: if false; // Server-side only via Admin SDK
       allow update: if request.auth != null && resource.data.recipientId == request.auth.uid; // Mark as read
       allow delete: if false;
     }
 
-    // Audit logs: append-only, highly restricted read
+    // Audit logs: server-side only writes
     match /auditLogs/{auditId} {
       allow read: if request.auth != null && hasRole(request.auth.uid, ['administrator', 'internal_reader']);
-      allow create: if request.auth != null; // Created by server-side functions
+      allow create: if false; // Server-side only via Admin SDK
       allow update, delete: if false;
     }
 
@@ -108,9 +108,11 @@ service cloud.firestore {
 
       return userRole == 'administrator'
         ? true
-        : userRole == 'internal_reader'
-          ? !(request.method in ['write', 'update', 'delete'])
-          : task.createdBy == userId || task.responsibleUserId == userId || userId in task.participantIds;
+        : userRole == 'coordinator'
+          ? true
+          : userRole == 'internal_reader'
+            ? !(request.method in ['write', 'update', 'delete'])
+            : task.createdBy == userId || task.responsibleUserId == userId || userId in task.participantIds;
     }
   }
 }

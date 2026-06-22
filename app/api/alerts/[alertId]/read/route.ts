@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { markAlertAsRead } from '@/src/domain/notifications/notification-service';
-import { getSessionUser } from '@/src/domain/auth/auth-service';
+import { getSessionFromRequest } from '@/src/lib/session';
 
 export async function POST(
   request: NextRequest,
@@ -9,14 +9,9 @@ export async function POST(
 ) {
   try {
     const { alertId } = await params;
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await getSessionUser(token);
+    const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await markAlertAsRead(alertId);

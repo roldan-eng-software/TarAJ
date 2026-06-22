@@ -3,21 +3,16 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getSessionUser } from '@/src/domain/auth/auth-service';
+import { getSessionFromRequest } from '@/src/lib/session';
 import { listUsers, createUserFull } from '@/src/domain/auth/user-service';
 
 
 // ── GET /api/admin/users ────────────────────────────────────────
 export async function GET(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await getSessionUser(token);
+    const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -42,14 +37,9 @@ export async function GET(request: NextRequest) {
 // ── POST /api/admin/users ───────────────────────────────────────
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await getSessionUser(token);
+    const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { deleteComment } from '@/src/domain/comments/comment-service';
-import { getSessionUser } from '@/src/domain/auth/auth-service';
+import { getSessionFromRequest } from '@/src/lib/session';
 import { assertCan } from '@/src/domain/rbac/rbac-service';
 
 export async function DELETE(
@@ -10,14 +10,9 @@ export async function DELETE(
 ) {
   try {
     const { taskId, commentId } = await params;
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await getSessionUser(token);
+    const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     assertCan(session, 'delete', 'comment');

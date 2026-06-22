@@ -4,13 +4,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { TaskCategory } from '@/src/types/domain';
 
-function getToken(): string | undefined {
-  return document.cookie
-    .split('; ')
-    .find((r) => r.startsWith('token='))
-    ?.split('=')[1];
-}
-
 interface CategoryModalProps {
   mode: 'create' | 'edit';
   category?: TaskCategory;
@@ -100,9 +93,8 @@ export default function CategoriesPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const res = await fetch('/api/admin/categories', {
-        headers: token ? { authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
       });
 
       if (res.status === 403) {
@@ -129,10 +121,10 @@ export default function CategoriesPage() {
   }, [fetchCategories]);
 
   const handleCreate = async (data: { name: string; order: number }) => {
-    const token = getToken();
     const res = await fetch('/api/admin/categories', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Falha ao criar');
@@ -140,10 +132,10 @@ export default function CategoriesPage() {
   };
 
   const handleUpdate = async (categoryId: string, data: { name?: string; order?: number }) => {
-    const token = getToken();
     const res = await fetch(`/api/admin/categories/${categoryId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Falha ao atualizar');
@@ -151,10 +143,10 @@ export default function CategoriesPage() {
   };
 
   const handleToggleActive = async (category: TaskCategory) => {
-    const token = getToken();
     const res = await fetch(`/api/admin/categories/${category.id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ active: !category.active }),
     });
     if (!res.ok) throw new Error('Falha ao atualizar');
@@ -164,10 +156,9 @@ export default function CategoriesPage() {
   const handleDelete = async (category: TaskCategory) => {
     if (!confirm(`Tem certeza que deseja excluir "${category.name}"?`)) return;
 
-    const token = getToken();
     const res = await fetch(`/api/admin/categories/${category.id}`, {
       method: 'DELETE',
-      headers: { authorization: `Bearer ${token}` },
+      credentials: 'include',
     });
     if (!res.ok) throw new Error('Falha ao excluir');
     await fetchCategories();

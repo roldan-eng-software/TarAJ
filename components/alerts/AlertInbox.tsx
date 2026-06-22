@@ -14,13 +14,8 @@ export default function AlertInbox({ userId }: AlertInboxProps) {
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        const token = document.cookie
-          .split('; ')
-          .find((row) => row.startsWith('token='))
-          ?.split('=')[1];
-
         const res = await fetch('/api/alerts?unread=true&limit=5', {
-          headers: token ? { authorization: `Bearer ${token}` } : {},
+          credentials: 'include',
         });
 
         if (res.ok) {

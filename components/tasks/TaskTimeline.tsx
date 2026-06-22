@@ -150,15 +150,9 @@ export default function TaskTimeline({ taskId }: TaskTimelineProps) {
     const fetchUsersAndHistory = async () => {
       try {
         setLoading(true);
-        const token = document.cookie
-          .split('; ')
-          .find((row) => row.startsWith('token='))
-          ?.split('=')[1];
-
-        const headers: HeadersInit = token ? { authorization: `Bearer ${token}` } : {};
 
         // Fetch users first for name mapping
-        const usersRes = await fetch('/api/users', { headers });
+        const usersRes = await fetch('/api/users', { credentials: 'include' });
         let mapping: Record<string, string> = {};
         if (usersRes.ok) {
           const usersData = await usersRes.json();
@@ -169,7 +163,7 @@ export default function TaskTimeline({ taskId }: TaskTimelineProps) {
         }
 
         // Fetch task details (which contains history)
-        const res = await fetch(`/api/tasks/${taskId}`, { headers });
+        const res = await fetch(`/api/tasks/${taskId}`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to load history');
 
         const task = await res.json();

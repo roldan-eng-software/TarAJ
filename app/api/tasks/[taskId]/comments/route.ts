@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createComment, getTaskComments } from '@/src/domain/comments/comment-service';
-import { getSessionUser } from '@/src/domain/auth/auth-service';
+import { getSessionFromRequest } from '@/src/lib/session';
 
 export async function GET(
   request: NextRequest,
@@ -9,14 +9,9 @@ export async function GET(
 ) {
   try {
     const { taskId } = await params;
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await getSessionUser(token);
+    const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const comments = await getTaskComments(taskId);
@@ -33,14 +28,9 @@ export async function POST(
 ) {
   try {
     const { taskId } = await params;
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await getSessionUser(token);
+    const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();

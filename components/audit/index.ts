@@ -1,2 +1,1 @@
-// Placeholder for future audit-related components
-export {};
+export { AuditLogViewer } from './AuditLogViewer';

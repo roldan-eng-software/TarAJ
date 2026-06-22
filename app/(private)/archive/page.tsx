@@ -1,34 +1,30 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { LoadingState, EmptyState } from '@/components/ui/StateViews';
+import Pagination from '@/components/ui/Pagination';
 import type { Task } from '@/src/types/domain';
 
-function getToken(): string | undefined {
-  return document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('token='))
-    ?.split('=')[1];
-}
+const ITEMS_PER_PAGE = 12;
 
 export default function ArchivePage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const fetchArchivedTasks = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const token = getToken();
       const params = new URLSearchParams();
       if (searchTerm) params.set('q', searchTerm);
 
-      const res = await fetch(`/api/tasks?archived=true&${params.toString()}`, {
-        headers: token ? { authorization: `Bearer ${token}` } : {},
+      const res = await fetch(`/api/tasks?archived=true&limit=200&${params.toString()}`, {
+        credentials: 'include',
       });
 
       if (!res.ok) throw new Error('Failed to load archived tasks');
@@ -47,10 +43,20 @@ export default function ArchivePage() {
     fetchArchivedTasks();
   }, [fetchArchivedTasks]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchArchivedTasks();
   };
+
+  const totalPages = Math.max(1, Math.ceil(tasks.length / ITEMS_PER_PAGE));
+  const paginatedTasks = useMemo(
+    () => tasks.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE),
+    [tasks, page]
+  );
 
   if (loading) {
     return <LoadingState message="Carregando..." />;
@@ -75,33 +81,37 @@ export default function ArchivePage() {
       {tasks.length === 0 ? (
         <EmptyState message="Nenhuma tarefa arquivada encontrada." />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tasks.map((task) => (
-            <Link
-              key={task.id}
-              href={`/tasks/${task.id}`}
-              className="block p-4 bg-white rounded-lg border hover:shadow-md transition"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium text-gray-900">{task.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{task.referenceCode}</p>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {paginatedTasks.map((task) => (
+              <Link
+                key={task.id}
+                href={`/tasks/${task.id}`}
+                className="block p-4 bg-white rounded-lg border hover:shadow-md transition"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium text-gray-900">{task.title}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{task.referenceCode}</p>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {task.archivedAt ? new Date(task.archivedAt).toLocaleDateString('pt-BR') : ''}
+                  </span>
                 </div>
-                <span className="text-xs text-gray-500">
-                  {task.archivedAt ? new Date(task.archivedAt).toLocaleDateString('pt-BR') : ''}
-                </span>
-              </div>
-              <div className="flex gap-2 mt-3">
-                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
-                  {task.category}
-                </span>
-                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
-                  {task.priority}
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
+                <div className="flex gap-2 mt-3">
+                  <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
+                    {task.category}
+                  </span>
+                  <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
+                    {task.priority}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        </>
       )}
     </div>
   );

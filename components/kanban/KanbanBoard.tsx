@@ -18,13 +18,6 @@ const STAGES: { id: StageId; label: string }[] = [
   { id: 'concluida', label: 'Concluída' },
 ];
 
-function getToken(): string | undefined {
-  return document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('token='))
-    ?.split('=')[1];
-}
-
 export default function KanbanBoard() {
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -38,10 +31,8 @@ export default function KanbanBoard() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
-
       const res = await fetch('/api/tasks?archived=false&limit=100', {
-        headers: token ? { authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -64,9 +55,9 @@ export default function KanbanBoard() {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const token = getToken();
-      const headers: HeadersInit = token ? { authorization: `Bearer ${token}` } : {};
-      const res = await fetch('/api/users', { headers });
+      const res = await fetch('/api/users', {
+        credentials: 'include',
+      });
       if (res.ok) {
         const data = await res.json();
         const map: Record<string, string> = {};
@@ -88,14 +79,10 @@ export default function KanbanBoard() {
   const handleMove = async (taskId: string, targetStageId: StageId) => {
     try {
       setMovingTaskId(taskId);
-      const token = getToken();
-
       const res = await fetch(`/api/tasks/${taskId}/transitions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ targetStageId }),
       });
 
@@ -116,14 +103,10 @@ export default function KanbanBoard() {
 
   const handleCreateTask = async (data: TaskFormData) => {
     try {
-      const token = getToken();
-
       const res = await fetch('/api/tasks', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(data),
       });
 

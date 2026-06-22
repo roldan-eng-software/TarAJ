@@ -27,13 +27,6 @@ const ROLE_COLORS: Record<RoleId, string> = {
   internal_reader: 'bg-gray-100 text-gray-700',
 };
 
-function getToken(): string | undefined {
-  return document.cookie
-    .split('; ')
-    .find((r) => r.startsWith('token='))
-    ?.split('=')[1];
-}
-
 // ── Create User Modal ────────────────────────────────────────────
 function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [form, setForm] = useState({ email: '', displayName: '', roleId: 'collaborator' as RoleId, password: '' });
@@ -55,7 +48,8 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
     try {
       const res = await fetch('/api/admin/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', authorization: `Bearer ${getToken()}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(form),
       });
       if (!res.ok) {
@@ -130,7 +124,8 @@ function EditUserModal({ user, onClose, onUpdated }: { user: UserRow; onClose: (
     try {
       const res = await fetch(`/api/admin/users/${user.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', authorization: `Bearer ${getToken()}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(form),
       });
       if (!res.ok) {
@@ -150,7 +145,7 @@ function EditUserModal({ user, onClose, onUpdated }: { user: UserRow; onClose: (
     try {
       const res = await fetch(`/api/admin/users/${user.id}/reset-password`, {
         method: 'POST',
-        headers: { authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       });
       if (!res.ok) {
         const d = await res.json();
@@ -241,14 +236,13 @@ export default function AdminUsersPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const params = new URLSearchParams();
       if (filterRole) params.set('roleId', filterRole);
       if (filterStatus) params.set('status', filterStatus);
       if (search) params.set('q', search);
 
       const res = await fetch(`/api/admin/users?${params}`, {
-        headers: token ? { authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
       });
 
       if (res.status === 403) {

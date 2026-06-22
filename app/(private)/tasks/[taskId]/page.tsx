@@ -1,22 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import TaskTimeline from '@/components/tasks/TaskTimeline';
 import TaskComments from '@/components/tasks/TaskComments';
 import TaskAttachments from '@/components/tasks/TaskAttachments';
+import TaskForm from '@/components/tasks/TaskForm';
+import type { TaskFormData } from '@/components/tasks/TaskForm';
 import ArchiveActions from '@/components/tasks/ArchiveActions';
 import { LoadingState, ErrorState } from '@/components/ui/StateViews';
 import type { Task } from '@/src/types/domain';
 import type { TaskComment } from '@/src/domain/comments/comment-service';
 import type { TaskAttachment } from '@/src/domain/attachments/attachment-service';
-
-function getToken(): string | undefined {
-  return document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('token='))
-    ?.split('=')[1];
-}
 
 type Tab = 'timeline' | 'comments' | 'attachments';
 
@@ -31,19 +26,16 @@ export default function TaskDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('timeline');
+  const [editing, setEditing] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
 
-  useEffect(() => {
-    fetchTask();
-  }, [taskId]);
-
-  const fetchTask = async () => {
+  const fetchTask = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
-
       const res = await fetch(`/api/tasks/${taskId}`, {
-        headers: token ? { authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -63,10 +55,10 @@ export default function TaskDetailPage() {
 
       const [commentsRes, attachmentsRes] = await Promise.all([
         fetch(`/api/tasks/${taskId}/comments`, {
-          headers: token ? { authorization: `Bearer ${token}` } : {},
+          credentials: 'include',
         }),
         fetch(`/api/tasks/${taskId}/attachments`, {
-          headers: token ? { authorization: `Bearer ${token}` } : {},
+          credentials: 'include',
         }),
       ]);
 
@@ -84,6 +76,35 @@ export default function TaskDetailPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  }, [taskId, router]);
+
+  useEffect(() => {
+    fetchTask();
+  }, [fetchTask]);
+
+  const handleEdit = async (data: TaskFormData) => {
+    setEditLoading(true);
+    setEditError(null);
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to update task');
+      }
+
+      setEditing(false);
+      fetchTask();
+    } catch (err: any) {
+      setEditError(err.message || 'Erro ao atualizar tarefa');
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -188,13 +209,58 @@ export default function TaskDetailPage() {
         )}
       </div>
 
-      <div className="mb-6">
+      <div className="flex gap-2 mb-6">
+        {!task.archived && (
+          <button
+            onClick={() => setEditing(true)}
+            className="px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition cursor-pointer"
+          >
+            Editar
+          </button>
+        )}
         <ArchiveActions
           task={task}
           onArchiveSuccess={handleArchiveSuccess}
           onRestoreSuccess={handleRestoreSuccess}
         />
       </div>
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900">Editar tarefa</h2>
+              <button
+                onClick={() => { setEditing(false); setEditError(null); }}
+                className="text-gray-400 hover:text-gray-600 text-xl cursor-pointer"
+                aria-label="Fechar"
+              >
+                &times;
+              </button>
+            </div>
+            {editError && (
+              <p className="text-red-600 text-sm bg-red-50 px-3 py-2 rounded mb-4">{editError}</p>
+            )}
+            <TaskForm
+              onSubmit={handleEdit}
+              initialData={{
+                title: task.title,
+                description: task.description,
+                category: task.category,
+                priority: task.priority,
+                responsibleUserId: task.responsibleUserId,
+                dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+                confidentialityLevel: task.confidentialityLevel,
+                internalNotes: task.internalNotes,
+              }}
+              isEditing
+            />
+            {editLoading && (
+              <p className="text-sm text-gray-500 mt-2 text-center">Salvando...</p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex gap-4 sm:gap-6 overflow-x-auto">

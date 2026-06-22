@@ -23,23 +23,11 @@ export default function PrivateLayout({
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = document.cookie
-          .split('; ')
-          .find((row) => row.startsWith('token='))
-          ?.split('=')[1];
-
-        if (!token) {
-          router.push('/login');
-          return;
-        }
-
         const res = await fetch('/api/auth/session', {
-          method: 'POST',
-          headers: { authorization: `Bearer ${token}` },
+          credentials: 'include',
         });
 
         if (!res.ok) {
-          document.cookie = 'token=; path=/; max-age=0';
           router.push('/login');
           return;
         }
@@ -82,11 +70,11 @@ export default function PrivateLayout({
     { href: '/alerts', label: 'Alertas', showBadge: true },
     { href: '/archive', label: 'Arquivo' },
     { href: '/settings', label: 'Config' },
-    ...(isAdmin ? [{ href: '/admin/users', label: 'Usuários' }, { href: '/admin/alert-settings', label: 'Alertas' }, { href: '/admin/categories', label: 'Categorias' }] : []),
+    ...(isAdmin ? [{ href: '/admin/users', label: 'Usuários' }, { href: '/admin/audit-logs', label: 'Auditoria' }, { href: '/admin/email-jobs', label: 'Email Jobs' }, { href: '/admin/alert-settings', label: 'Alertas' }, { href: '/admin/categories', label: 'Categorias' }] : []),
   ];
 
-  const handleLogout = () => {
-    document.cookie = 'token=; path=/; max-age=0';
+  const handleLogout = async () => {
+    await fetch('/api/auth/session', { method: 'DELETE' });
     router.push('/login');
   };
 

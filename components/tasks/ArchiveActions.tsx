@@ -9,13 +9,6 @@ interface ArchiveActionsProps {
   onRestoreSuccess?: (task: Task) => void;
 }
 
-function getToken(): string | undefined {
-  return document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('token='))
-    ?.split('=')[1];
-}
-
 export default function ArchiveActions({
   task,
   onArchiveSuccess,
@@ -32,10 +25,9 @@ export default function ArchiveActions({
       setIsLoading(true);
       setError(null);
 
-      const token = getToken();
       const res = await fetch(`/api/tasks/${task.id}/archive`, {
         method: 'POST',
-        headers: token ? { authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -59,13 +51,10 @@ export default function ArchiveActions({
       setIsLoading(true);
       setError(null);
 
-      const token = getToken();
       const res = await fetch(`/api/tasks/${task.id}/restore`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ stageId: selectedStage }),
       });
 

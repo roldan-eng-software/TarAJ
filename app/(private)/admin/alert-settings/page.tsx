@@ -76,13 +76,6 @@ const EVENT_LABELS: Record<string, string> = {
   mentioned_in_comment: 'Menção em comentário',
 };
 
-function getToken(): string | undefined {
-  return document.cookie
-    .split('; ')
-    .find((r) => r.startsWith('token='))
-    ?.split('=')[1];
-}
-
 function StageCard({
   stageId,
   configs,
@@ -249,9 +242,8 @@ export default function AlertSettingsPage() {
     try {
       setLoading(true);
       setError(null);
-      const token = getToken();
       const res = await fetch('/api/admin/alert-config', {
-        headers: token ? { authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
       });
 
       if (res.status === 403) {
@@ -280,10 +272,10 @@ export default function AlertSettingsPage() {
   const handleUpdate = async (configId: string, updates: Record<string, unknown>) => {
     setSavingId(configId);
     try {
-      const token = getToken();
       const res = await fetch('/api/admin/alert-config', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ configId, ...updates }),
       });
 

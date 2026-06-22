@@ -25,17 +25,12 @@ export default function TaskAttachments({
       setError(null);
       const file = files[0];
 
-      const token = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('token='))
-        ?.split('=')[1];
-
       const formData = new FormData();
       formData.append('file', file);
 
       const res = await fetch(`/api/tasks/${taskId}/attachments`, {
         method: 'POST',
-        headers: token ? { authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
         body: formData,
       });
 

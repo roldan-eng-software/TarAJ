@@ -4,7 +4,7 @@ import {
   getTaskAttachments,
   uploadAttachment,
 } from '@/src/domain/attachments/attachment-service';
-import { getSessionUser } from '@/src/domain/auth/auth-service';
+import { getSessionFromRequest } from '@/src/lib/session';
 import { assertCanAccessTask } from '@/src/domain/rbac/rbac-service';
 import { getTask } from '@/src/domain/tasks/task-service';
 
@@ -14,14 +14,9 @@ export async function GET(
 ) {
   try {
     const { taskId } = await params;
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await getSessionUser(token);
+    const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const task = await getTask(taskId);
@@ -45,14 +40,9 @@ export async function POST(
 ) {
   try {
     const { taskId } = await params;
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await getSessionUser(token);
+    const session = await getSessionFromRequest(request);
     if (!session) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const task = await getTask(taskId);

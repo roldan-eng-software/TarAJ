@@ -37,16 +37,9 @@ export default function TaskForm({ onSubmit, initialData, isEditing }: TaskFormP
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const token = document.cookie
-          .split('; ')
-          .find((row) => row.startsWith('token='))
-          ?.split('=')[1];
-
-        const headers: HeadersInit = token ? { authorization: `Bearer ${token}` } : {};
-
         const [usersRes, categoriesRes] = await Promise.all([
-          fetch('/api/users', { headers }),
-          fetch('/api/categories', { headers }),
+          fetch('/api/users', { credentials: 'include' }),
+          fetch('/api/categories', { credentials: 'include' }),
         ]);
 
         if (usersRes.ok) {

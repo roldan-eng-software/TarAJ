@@ -27,8 +27,17 @@ export default function LoginPage() {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const token = await cred.user.getIdToken();
 
-      const secure = location.protocol === 'https:' ? '; Secure' : '';
-      document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax${secure}`;
+      const res = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ idToken: token }),
+      });
+
+      if (!res.ok) {
+        setError('Erro ao estabelecer sessão. Tente novamente.');
+        setLoading(false);
+        return;
+      }
 
       router.push('/kanban');
     } catch (err: any) {

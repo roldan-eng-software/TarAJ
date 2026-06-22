@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getTask } from '@/src/domain/tasks/task-service';
-import { getSessionUser } from '@/src/domain/auth/auth-service';
+import { getSessionFromRequest } from '@/src/lib/session';
 import { validateTransition } from '@/src/domain/workflow/workflow-service';
 import { assertCanAccessTask } from '@/src/domain/rbac/rbac-service';
 import { recordStageChange } from '@/src/domain/history/history-service';
@@ -15,14 +15,9 @@ export async function POST(
   { params }: { params: Promise<{ taskId: string }> }
 ) {
   const { taskId } = await params;
-  const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const session = await getSessionUser(token);
+  const session = await getSessionFromRequest(request);
   if (!session) {
-    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
