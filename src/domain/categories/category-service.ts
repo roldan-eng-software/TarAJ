@@ -23,13 +23,8 @@ export async function getAllCategories(): Promise<TaskCategory[]> {
 }
 
 export async function getActiveCategories(): Promise<TaskCategory[]> {
-  const snapshot = await adminDb
-    .collection('taskCategories')
-    .where('active', '==', true)
-    .orderBy('order', 'asc')
-    .get();
-
-  return snapshot.docs.map((doc) => docToCategory(doc.id, doc.data()));
+  const all = await getAllCategories();
+  return all.filter((cat) => cat.active);
 }
 
 export async function createCategory(
