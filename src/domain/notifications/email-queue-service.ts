@@ -52,16 +52,27 @@ export async function getPendingEmails(limit: number = 50): Promise<EmailJob[]> 
     .where('status', '==', 'pending')
     .get();
 
-  return snapshot.docs
-    .map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt.toDate(),
-      sentAt: doc.data().sentAt?.toDate(),
-    })) as EmailJob[]
-    .filter((job) => job.attempts < 3)
-    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-    .slice(0, limit);
+  const jobs: EmailJob[] = [];
+
+  for (const doc of snapshot.docs) {
+    try {
+      const data = doc.data();
+      const attempts = typeof data.attempts === 'number' ? data.attempts : 0;
+      if (attempts >= 3) continue;
+
+      jobs.push({
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt) || new Date(),
+        sentAt: data.sentAt?.toDate?.() || null,
+      } as EmailJob);
+    } catch {
+      // Skip malformed documents
+    }
+  }
+
+  jobs.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  return jobs.slice(0, limit);
 }
 
 /**
