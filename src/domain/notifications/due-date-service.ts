@@ -12,9 +12,9 @@ export async function getUpcomingDueTasks(daysAhead: number = 3): Promise<Task[]
 
   const snapshot = await adminDb
     .collection('tasks')
+    .where('archived', '==', false)
     .where('dueDate', '>=', now)
     .where('dueDate', '<=', futureDate)
-    .where('archived', '==', false)
     .get();
 
   return snapshot.docs.map((doc) => ({
@@ -31,8 +31,8 @@ export async function getOverdueTasks(): Promise<Task[]> {
 
   const snapshot = await adminDb
     .collection('tasks')
-    .where('dueDate', '<', now)
     .where('archived', '==', false)
+    .where('dueDate', '<', now)
     .get();
 
   return snapshot.docs.map((doc) => ({

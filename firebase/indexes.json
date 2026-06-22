@@ -28,8 +28,8 @@
       "collectionGroup": "tasks",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "dueDate", "order": "ASCENDING" },
-        { "fieldPath": "archived", "order": "ASCENDING" }
+        { "fieldPath": "archived", "order": "ASCENDING" },
+        { "fieldPath": "dueDate", "order": "ASCENDING" }
       ]
     },
     {
@@ -159,6 +159,14 @@
       ]
     },
     {
+      "collectionGroup": "emailQueue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [
@@ -213,6 +221,6 @@
         { "fieldPath": "mentions", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "ASCENDING" }
       ]
-    },
+    }
   ]
 }

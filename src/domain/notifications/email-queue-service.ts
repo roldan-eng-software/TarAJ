@@ -129,8 +129,8 @@ export async function cleanupOldEmailJobs(retentionDays: number = 30): Promise<n
   const batch = adminDb.batch();
   const oldJobs = await adminDb
     .collection('emailQueue')
-    .where('createdAt', '<', cutoffDate)
     .where('status', '==', 'sent')
+    .where('createdAt', '<', cutoffDate)
     .limit(500)
     .get();
 
