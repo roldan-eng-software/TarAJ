@@ -4,9 +4,9 @@ Private legal task management system built with Next.js, Firebase, and TypeScrip
 
 ## Project Status
 
-**Current Phase**: Complete (MVP)  
-**Completed Phases**: Setup, Tests, Core (US1-US4), Integration, Polish  
-**Overall Progress**: MVP complete - 160 tests passing, TypeScript clean, lint clean
+**Current Phase**: Complete (MVP + Security + UX)  
+**Completed Phases**: Setup, Tests, Core (US1-US4), Integration, Polish, Security Hardening, UX Improvements  
+**Overall Progress**: MVP completo - 204 testes passando, TypeScript limpo, lint limpo
 
 ## Technology Stack
 
@@ -127,9 +127,29 @@ Visit `http://localhost:3000` to start.
 
 ### Security & Audit
 - Firestore Security Rules with deny-by-default
+- Server-side RBAC enforcement via assertCan() and canAccessTask()
+- httpOnly session cookie (not accessible via JavaScript)
+- Rate limiting on API routes
+- Route protection via middleware (redirects to /login)
 - Complete audit trail for critical events
 - Login failure tracking
 - Permission change logging
+
+### Admin Panel
+- User management (CRUD, roles, password reset)
+- Category management (CRUD, active/inactive)
+- Alert configuration (per-stage, per-event toggles, recipient roles)
+- Audit log viewer with filters
+- Email job queue monitoring with manual processing
+
+### Kanban Filters
+- Filter by stage, priority, category, responsible user, due date status (próximos/vencidos), confidentiality level, and text search
+- Responsive: columns on desktop, stage selector + vertical list on mobile
+
+### Loading Skeletons & Error Boundaries
+- Skeleton loading states for all pages (kanban columns, cards, tables, task detail)
+- Error boundary components at root, private, and auth route levels
+- Custom 404 page with navigation back to kanban
 
 ## Development Workflow
 

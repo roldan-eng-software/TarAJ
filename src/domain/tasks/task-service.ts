@@ -89,6 +89,7 @@ export async function listTasks(
     priority?: string;
     archived?: boolean;
     category?: string;
+    confidentialityLevel?: string;
     dueDateStatus?: 'upcoming' | 'overdue';
   },
   limit: number = 50
@@ -115,6 +116,21 @@ export async function listTasks(
     query = query.where('category', '==', filters.category);
   }
 
+  if (filters?.confidentialityLevel) {
+    query = query.where('confidentialityLevel', '==', filters.confidentialityLevel);
+  }
+
+  if (filters?.dueDateStatus === 'upcoming') {
+    const now = new Date();
+    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    query = query.where('dueDate', '>=', now).where('dueDate', '<=', threeDaysFromNow);
+  }
+
+  if (filters?.dueDateStatus === 'overdue') {
+    const now = new Date();
+    query = query.where('dueDate', '<', now);
+  }
+
   const snapshot = await query
     .orderBy('updatedAt', 'desc')
     .limit(limit)
@@ -133,20 +149,19 @@ export async function listTasks(
     } as Task;
   });
 
+  // Fallback in-memory filter for completedAt and edge cases
   if (filters?.dueDateStatus === 'upcoming') {
     const now = new Date();
-    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
     tasks = tasks.filter((t) => {
       if (!t.dueDate || t.completedAt) return false;
-      return t.dueDate > now && t.dueDate <= threeDaysFromNow;
+      return t.dueDate > now;
     });
   }
 
   if (filters?.dueDateStatus === 'overdue') {
-    const now = new Date();
     tasks = tasks.filter((t) => {
       if (!t.dueDate || t.completedAt) return false;
-      return t.dueDate < now;
+      return true;
     });
   }
 

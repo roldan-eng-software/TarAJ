@@ -1,0 +1,16 @@
+{
+  "name": "Sistema Jurídico - AJ Regional",
+  "short_name": "SisJur",
+  "description": "Sistema de acompanhamento de tarefas jurídicas em Kanban",
+  "start_url": "/kanban",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#1e293b",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

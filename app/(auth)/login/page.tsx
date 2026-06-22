@@ -30,7 +30,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/session', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ idToken: token }),
+        body: JSON.stringify({ idToken: token, email }),
       });
 
       if (!res.ok) {

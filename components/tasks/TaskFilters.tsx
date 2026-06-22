@@ -13,6 +13,7 @@ export default function TaskFilters({ onFilter, showStage = true, showArchived =
   const [priority, setPriority] = useState('');
   const [category, setCategory] = useState('');
   const [responsibleUserId, setResponsibleUserId] = useState('');
+  const [confidentialityLevel, setConfidentialityLevel] = useState('');
   const [dueDateStatus, setDueDateStatus] = useState('');
   const [q, setQ] = useState('');
   const [archived, setArchived] = useState('');
@@ -43,6 +44,7 @@ export default function TaskFilters({ onFilter, showStage = true, showArchived =
     if (priority) params.priority = priority;
     if (category) params.category = category;
     if (responsibleUserId) params.responsibleUserId = responsibleUserId;
+    if (confidentialityLevel) params.confidentialityLevel = confidentialityLevel;
     if (dueDateStatus) params.dueDateStatus = dueDateStatus;
     if (q) params.q = q;
     if (archived) params.archived = archived;
@@ -59,6 +61,7 @@ export default function TaskFilters({ onFilter, showStage = true, showArchived =
     setPriority('');
     setCategory('');
     setResponsibleUserId('');
+    setConfidentialityLevel('');
     setDueDateStatus('');
     setQ('');
     setArchived('');
@@ -158,6 +161,20 @@ export default function TaskFilters({ onFilter, showStage = true, showArchived =
             <option value="">Todos</option>
             <option value="upcoming">Próximos (3 dias)</option>
             <option value="overdue">Vencidos</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Confidencialidade</label>
+          <select
+            value={confidentialityLevel}
+            onChange={(e) => setConfidentialityLevel(e.target.value)}
+            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-sky-500 bg-white"
+          >
+            <option value="">Todas</option>
+            <option value="interno">Interno</option>
+            <option value="restrito">Restrito</option>
+            <option value="público">Público</option>
           </select>
         </div>
 

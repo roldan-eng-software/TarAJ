@@ -80,6 +80,11 @@ service cloud.firestore {
       allow write: if false; // Managed by server functions
     }
 
+    // Notification preferences: user can read/write their own
+    match /notificationPreferences/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
     // Stage alert config: admin read, server-side write
     match /stageAlertConfig/{configId} {
       allow read: if request.auth != null && hasRole(request.auth.uid, ['administrator']);

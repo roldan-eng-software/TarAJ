@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { checkRateLimit, getRateLimitHeaders } from '@/src/lib/rate-limit';
+import { logLoginAttempt } from '@/src/domain/audit/audit-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,12 +21,14 @@ export async function POST(request: NextRequest) {
     }
 
     let token: string | null = null;
+    let email: string | null = null;
 
     const contentType = request.headers.get('content-type') || '';
 
     if (contentType.includes('application/json')) {
       const body = await request.json().catch(() => ({}));
       token = body.idToken || null;
+      email = body.email || null;
     }
 
     if (!token) {
@@ -34,13 +37,23 @@ export async function POST(request: NextRequest) {
     }
 
     if (!token) {
+      if (email) {
+        await logLoginAttempt(email, false, 'No token provided');
+      }
       return NextResponse.json({ error: 'No token provided' }, { status: 401 });
     }
 
     const sessionUser = await getSessionUser(token);
 
     if (!sessionUser) {
+      if (email) {
+        await logLoginAttempt(email, false, 'Invalid token or user not found');
+      }
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    if (email) {
+      await logLoginAttempt(email, true);
     }
 
     const response = NextResponse.json(sessionUser);
