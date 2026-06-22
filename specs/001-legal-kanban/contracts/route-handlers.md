@@ -8,11 +8,7 @@ domain service, and return structured errors.
 
 ```json
 {
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "Authentication required",
-    "requestId": "req_..."
-  }
+  "error": "Authentication required"
 }
 ```
 
@@ -30,13 +26,7 @@ Common status mapping:
 
 Purpose: exchange/confirm Firebase identity for an application session/profile.
 
-Request:
-
-```json
-{
-  "idToken": "firebase-id-token"
-}
-```
+Request expects `Authorization: Bearer <firebase-id-token>` header.
 
 Response:
 
@@ -78,7 +68,7 @@ Response:
       "stageId": "entrada",
       "priority": "normal",
       "responsibleUserId": "user_123",
-      "dueAt": "2026-06-25T12:00:00.000Z",
+      "dueDate": "2026-06-25T12:00:00.000Z",
       "archived": false
     }
   ]
@@ -98,9 +88,9 @@ Request:
   "category": "documentos",
   "priority": "normal",
   "responsibleUserId": "user_123",
-  "participantUserIds": ["user_456"],
-  "dueAt": "2026-06-25T12:00:00.000Z",
-  "confidentialityLevel": "standard",
+  "participantIds": ["user_456"],
+  "dueDate": "2026-06-25T12:00:00.000Z",
+  "confidentialityLevel": "interno",
   "internalNotes": "Observação interna"
 }
 ```
@@ -117,7 +107,7 @@ Side effects:
 ### GET /api/tasks/{taskId}
 
 Returns full task detail visible to the current user, including metadata and
-summary counts for history/comments/attachments/alerts.
+history events.
 
 ### PATCH /api/tasks/{taskId}
 
@@ -145,7 +135,6 @@ Response:
 ```json
 {
   "taskId": "task_123",
-  "previousStageId": "entrada",
   "stageId": "em-analise",
   "historyId": "history_123"
 }
@@ -156,7 +145,7 @@ Side effects:
 - workflow validation
 - task stage update
 - history event
-- audit log
+- audit log (including logDenied for denied transitions)
 - alerts for stage change or backward transition
 
 ### POST /api/tasks/{taskId}/archive
@@ -194,56 +183,83 @@ Side effects:
 
 ## Attachments
 
-### POST /api/tasks/{taskId}/attachments/upload-request
+### POST /api/tasks/{taskId}/attachments
 
-Creates an authorized upload intent/path for a task attachment.
+Uploads a file and registers attachment metadata in a single step.
 
-Request:
-
-```json
-{
-  "fileName": "documento.pdf",
-  "contentType": "application/pdf",
-  "sizeBytes": 123456
-}
-```
+Request: multipart form with file field.
 
 Response:
 
 ```json
 {
   "attachmentId": "attachment_123",
-  "storagePath": "tasks/task_123/attachments/attachment_123/documento.pdf",
-  "uploadMode": "controlled"
+  "fileName": "documento.pdf",
+  "sizeBytes": 123456,
+  "storagePath": "tasks/task_123/attachments/attachment_123/documento.pdf"
 }
 ```
 
-### POST /api/tasks/{taskId}/attachments/{attachmentId}/complete
+### GET /api/tasks/{taskId}/attachments/{attachmentId}
 
-Confirms metadata after upload and records history/audit.
-
-### GET /api/tasks/{taskId}/attachments/{attachmentId}/download
-
-Returns an authorized download reference or redirects to a temporary access
-mechanism chosen during implementation.
+Returns attachment metadata and a temporary download URL.
 
 ## Alerts
 
 ### GET /api/alerts
 
-Returns current user's alerts, with optional `unreadOnly=true`.
+Returns current user's alerts, with optional `unreadOnly=true`, `offset`, `limit`.
 
 ### POST /api/alerts/{alertId}/read
 
 Marks an alert as read for the current recipient.
 
+### PUT /api/alerts
+
+Marks all alerts as read for the current user.
+
 ## Admin
 
-### GET /api/admin/audit-logs
+### GET /api/admin/users
 
-Restricted to administrators/audit readers. Supports filtering by actor,
-resource, item and date range.
+Lists users with optional search and role filter.
 
-### PATCH /api/admin/users/{userId}
+### POST /api/admin/users
 
-Updates role/status/permissions and writes critical audit event.
+Creates a new user (Firebase Auth + Firestore profile).
+
+### GET/PATCH /api/admin/users/{userId}
+
+Reads or updates a user's role, status, and permissions.
+
+### POST /api/admin/users/{userId}/reset-password
+
+Generates a Firebase password reset link.
+
+### GET/PATCH /api/admin/alert-config
+
+Reads or updates alert configuration per stage and event type.
+
+### GET/POST /api/admin/categories
+
+Lists or creates task categories.
+
+### PATCH/DELETE /api/admin/categories/{categoryId}
+
+Updates or deletes a task category.
+
+### GET/POST /api/admin/email-jobs
+
+Reads pending email jobs or triggers processing.
+
+### GET/POST /api/cron/due-date-check
+
+Protected by CRON_SECRET. Scans and generates alerts for upcoming/overdue tasks.
+
+### GET/POST /api/cron/process-emails
+
+Protected by CRON_SECRET. Processes pending email queue.
+
+### POST /api/cron/cleanup
+
+Protected by CRON_SECRET. Cleans up old alerts and email jobs.

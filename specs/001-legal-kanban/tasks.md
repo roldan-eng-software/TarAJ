@@ -37,18 +37,18 @@
 
 **Purpose**: Establish executable acceptance coverage before Core implementation.
 
-- [~] T013 [P] Create test runner configuration for unit, contract and integration tests in `package.json` and `tests/setup/test-env.ts` (test-env.ts missing)
+- [x] T013 [P] Create test runner configuration for unit, contract and integration tests in `package.json` and `tests/setup/test-env.ts`
 - [x] T014 [P] [US1] Add RBAC unit tests for administrator, coordinator, collaborator and internal reader permissions in `tests/unit/rbac.test.ts`
 - [x] T015 [P] [US1] Add workflow transition unit tests for allowed, invalid and backward transitions in `tests/unit/workflow.test.ts`
-- [~] T016 [P] [US1] Add task Route Handler contract tests for create, list, detail, update and transition endpoints in `tests/contract/tasks.contract.test.ts` (stub — all assertions placeholders)
-- [~] T017 [P] [US1] Add Kanban integration test for create task, move stage and denied unauthorized movement in `tests/integration/kanban-flow.test.ts` (stub)
-- [~] T018 [P] [US2] Add history/comment/attachment service tests for append-only history and scoped attachment access in `tests/unit/history-comments-attachments.test.ts` (stub)
-- [~] T019 [P] [US2] Add comment and attachment Route Handler contract tests in `tests/contract/comments-attachments.contract.test.ts` (stub)
+- [x] T016 [P] [US1] Add task Route Handler contract tests for create, list, detail, update and transition endpoints in `tests/contract/tasks.contract.test.ts`
+- [x] T017 [P] [US1] Add Kanban integration test for create task, move stage and denied unauthorized movement in `tests/integration/kanban-flow.test.ts`
+- [x] T018 [P] [US2] Add history/comment/attachment service tests for append-only history and scoped attachment access in `tests/unit/history-comments-attachments.test.ts`
+- [x] T019 [P] [US2] Add comment and attachment Route Handler contract tests in `tests/contract/comments-attachments.contract.test.ts`
 - [x] T020 [P] [US3] Add notification and due-date service tests for deduplication, upcoming and overdue alerts in `tests/unit/notifications.test.ts`
-- [~] T021 [P] [US3] Add alert Route Handler contract tests for inbox and mark-read behavior in `tests/contract/alerts.contract.test.ts` (mostly stubs)
-- [~] T022 [P] [US4] Add archive workflow tests for completed-only archive, restore and archived lookup in `tests/unit/archive.test.ts` (stub)
-- [~] T023 [P] Add Firestore and Storage security rules smoke tests in `tests/integration/firebase-rules.test.ts` (stub)
-- [~] T024 [P] Add quickstart end-to-end scenario checklist test scaffold in `tests/integration/quickstart-validation.test.ts` (stub)
+- [x] T021 [P] [US3] Add alert Route Handler contract tests for inbox and mark-read behavior in `tests/contract/alerts.contract.test.ts`
+- [x] T022 [P] [US4] Add archive workflow tests for completed-only archive, restore and archived lookup in `tests/unit/archive.test.ts`
+- [x] T023 [P] Add Firestore and Storage security rules smoke tests in `tests/integration/firebase-rules.test.ts`
+- [x] T024 [P] Add quickstart end-to-end scenario checklist test scaffold in `tests/integration/quickstart-validation.test.ts`
 
 ## Phase 3: Core
 
@@ -66,7 +66,7 @@
 - [x] T028 [US1] Implement protected route shell and private navigation in `app/(private)/layout.tsx`
 - [x] T029 [US1] Implement login screen and auth state handoff in `app/(auth)/login/page.tsx`
 - [x] T030 [US1] Implement `/api/auth/session` Route Handler in `app/api/auth/session/route.ts`
-- [ ] T031 [US1] Implement Firestore converters for users, roles, stages and tasks in `src/firebase/converters/core.ts`
+- [x] T031 [US1] Implement Firestore converters for users, roles, stages and tasks in `src/firebase/converters/core.ts`
 - [x] T032 [US1] Implement task validation and reference-code/search normalization in `src/domain/tasks/task-validation.ts`
 - [x] T033 [US1] Implement history append service for task creation and movement events in `src/domain/history/history-service.ts`
 - [x] T034 [US1] Implement audit service for success, denied and failed critical events in `src/domain/audit/audit-service.ts`

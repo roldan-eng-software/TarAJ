@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-18
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "Criar um sistema web privado, interno e não comercial para acompanhamento de tarefas jurídicas de uma associação religiosa em fluxo Kanban. O sistema será usado por cerca de 20 pessoas autenticadas. O objetivo é permitir que tarefas jurídicas sejam criadas, acompanhadas, movidas entre estágios definidos, comentadas, anexadas, concluídas e arquivadas para referência futura. O sistema deve registrar histórico completo de cada tarefa e gerar alertas automáticos sempre que houver eventos importantes, como criação de tarefa, mudança de responsável, mudança de estágio, prazo próximo, prazo vencido, conclusão, arquivamento e retorno para estágio anterior. Os usuários terão papéis diferentes, com permissões distintas, como administrador, coordenador, colaborador e leitor interno. O sistema deve ser simples de usar, com linguagem visual sóbria, boa rastreabilidade e foco em segurança, privacidade e auditoria. O fluxo inicial do Kanban deve considerar: Entrada, Em análise, Aguardando documentos, Em andamento, Em revisão, Concluída e Arquivada. O MVP deve incluir autenticação de usuários, controle por papéis, quadro Kanban com movimentação de tarefas, histórico por tarefa, comentários e anexos, alertas internos e por e-mail, arquivamento e consulta de arquivados, filtros básicos, trilha de auditoria para eventos críticos. O sistema deve priorizar clareza operacional, preservação de histórico, menor privilégio e notificações úteis sem excesso."
 
