@@ -1,7 +1,10 @@
 // Seed script for demo data
 // Run with: npx tsx scripts/seed-demo-data.ts
+// Requires: FIREBASE_ADMIN_SDK_KEY env var set
 
-import { adminDb } from '@/src/firebase/admin';
+import { adminDb, adminAuth } from '@/src/firebase/admin';
+
+const DEFAULT_PASSWORD = 'Demo@123456';
 
 const USER_IDS = {
   admin: 'demo-admin-001',
@@ -127,11 +130,10 @@ const DEMO_TASKS = [
 async function seedDemoData() {
   console.log('Seeding demo data...\n');
 
-  const existingUsers = await adminDb.collection('users').limit(1).get();
-  if (!existingUsers.empty) {
-    console.log('Users already exist. Skipping user creation.');
-  } else {
-    for (const user of DEMO_USERS) {
+  for (const user of DEMO_USERS) {
+    const existingDoc = await adminDb.collection('users').doc(user.id).get();
+
+    if (!existingDoc.exists) {
       await adminDb.collection('users').doc(user.id).set({
         displayName: user.displayName,
         email: user.email,
@@ -141,7 +143,23 @@ async function seedDemoData() {
         updatedAt: now,
         lastLoginAt: daysAgo(1),
       });
-      console.log(`✓ Created user: ${user.displayName} (${user.email})`);
+      console.log(`✓ Created Firestore user: ${user.displayName} (${user.email})`);
+    } else {
+      console.log(`→ Firestore user already exists: ${user.displayName}`);
+    }
+
+    try {
+      await adminAuth.getUserByEmail(user.email);
+      console.log(`→ Firebase Auth user already exists: ${user.email}`);
+    } catch {
+      await adminAuth.createUser({
+        uid: user.id,
+        email: user.email,
+        password: DEFAULT_PASSWORD,
+        displayName: user.displayName,
+        disabled: false,
+      });
+      console.log(`✓ Created Firebase Auth: ${user.email} (password: ${DEFAULT_PASSWORD})`);
     }
   }
 
@@ -195,11 +213,12 @@ async function seedDemoData() {
   });
 
   console.log('\n✓ Demo data seeding completed!');
-  console.log('─'.repeat(40));
-  console.log('Users created (Firebase Auth not configured):');
-  console.log('  These users exist in Firestore but need Firebase Auth accounts.');
-  console.log('  Create accounts via Firebase Console or /api/admin/users.');
-  console.log('─'.repeat(40));
+  console.log('─'.repeat(50));
+  console.log('Credentials for login:');
+  for (const user of DEMO_USERS) {
+    console.log(`  ${user.email} / ${DEFAULT_PASSWORD}  (${user.displayName})`);
+  }
+  console.log('─'.repeat(50));
 }
 
 seedDemoData().catch((e) => {

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { adminAuth } from '@/src/firebase/admin';
+import { sendEmail } from '@/src/domain/notifications/email-sender';
 import { logLoginAttempt } from '@/src/domain/audit/audit-service';
 import { checkRateLimit, getRateLimitHeaders } from '@/src/lib/rate-limit';
+
+const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,11 +30,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email inválido.' }, { status: 422 });
     }
 
-    await logLoginAttempt(email, false, 'Password reset requested');
+    const resetLink = await adminAuth.generatePasswordResetLink(email, {
+      url: `${APP_URL}/login`,
+      handleCodeInApp: false,
+    });
+
+    await sendEmail({
+      to: email,
+      subject: '[TarAJ] Redefinição de senha',
+      text: `Clique no link abaixo para redefinir sua senha:\n\n${resetLink}\n\nSe você não solicitou esta alteração, ignore este e-mail.`,
+      html: `<p>Clique no link abaixo para redefinir sua senha:</p><p><a href="${resetLink}">Redefinir senha</a></p><p style="color:#64748b;font-size:12px">Se você não solicitou esta alteração, ignore este e-mail.</p>`,
+    });
+
+    await logLoginAttempt(email, false, 'Password reset link sent');
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Forgot password error:', error);
-    return NextResponse.json({ error: 'Erro interno.' }, { status: 500 });
+    await logLoginAttempt(emailFromRequest(request), false, 'Password reset failed');
+    return NextResponse.json({ error: 'Erro ao processar solicitação.' }, { status: 500 });
+  }
+}
+
+function emailFromRequest(request: NextRequest): string {
+  try {
+    const body = JSON.parse(request.headers.get('x-body') || '{}');
+    return body.email || 'unknown';
+  } catch {
+    return 'unknown';
   }
 }

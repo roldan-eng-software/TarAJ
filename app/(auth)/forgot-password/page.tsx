@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '@/src/firebase/client';
 import Link from 'next/link';
 
 export default function ForgotPasswordPage() {
@@ -22,30 +20,25 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      await sendPasswordResetEmail(auth, email);
-
-      await fetch('/api/auth/forgot-password', {
+      const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email }),
-      }).catch(() => {});
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setMessage({ type: 'error', text: data.error || 'Erro ao solicitar redefinição.' });
+        setLoading(false);
+        return;
+      }
 
       setMessage({
         type: 'success',
         text: 'Se o email estiver cadastrado, você receberá um link para redefinir sua senha.',
       });
-    } catch (err: any) {
-      const code = err?.code;
-      if (code === 'auth/user-not-found') {
-        setMessage({
-          type: 'success',
-          text: 'Se o email estiver cadastrado, você receberá um link para redefinir sua senha.',
-        });
-      } else if (code === 'auth/too-many-requests') {
-        setMessage({ type: 'error', text: 'Muitas tentativas. Tente novamente mais tarde.' });
-      } else {
-        setMessage({ type: 'error', text: 'Erro ao solicitar redefinição. Tente novamente.' });
-      }
+    } catch {
+      setMessage({ type: 'error', text: 'Erro ao solicitar redefinição. Tente novamente.' });
     } finally {
       setLoading(false);
     }

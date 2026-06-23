@@ -27,7 +27,7 @@ jobs:
 
       - run: npm run lint
 
-      - run: npm run typecheck
+      - run: npm run type-check
         continue-on-error: true
 
       - run: npm run build
