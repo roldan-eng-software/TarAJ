@@ -70,13 +70,6 @@ function buildOverdueMessage(taskTitle: string, daysSinceDue: number): string {
   return `Tarefa "${taskTitle}" está vencida há ${daysSinceDue} dias`;
 }
 
-function buildEmailSubject(taskTitle: string, daysUntilDue: number): string {
-  if (daysUntilDue === 1) {
-    return `[TarAJ] Vence amanhã: ${taskTitle}`;
-  }
-  return `[TarAJ] Vence em ${daysUntilDue} dias: ${taskTitle}`;
-}
-
 async function notifyRecipient(
   userId: string,
   eventType: 'due_upcoming' | 'due_overdue',

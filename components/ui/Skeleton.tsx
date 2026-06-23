@@ -30,7 +30,7 @@ export function KanbanCardSkeleton() {
   );
 }
 
-export function KanbanColumnSkeleton({ label }: { label: string }) {
+export function KanbanColumnSkeleton({ label: _label }: { label: string }) {
   return (
     <div className="flex-shrink-0 w-72 bg-gray-100 rounded-lg">
       <div className="px-3 py-2 border-b border-gray-200">

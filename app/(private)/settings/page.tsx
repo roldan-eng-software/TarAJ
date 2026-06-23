@@ -11,7 +11,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('profile');
   const [userEmail, setUserEmail] = useState('');
-  const [userId, setUserId] = useState<string | null>(null);
+  const [, setUserId] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
 
   // Login history

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { adminDb, FieldValue } from '@/src/firebase/admin';
+import { adminDb } from '@/src/firebase/admin';
 import { getSessionFromRequest } from '@/src/lib/session';
 
 const VALID_EVENT_TYPES = [
