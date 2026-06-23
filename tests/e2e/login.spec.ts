@@ -35,8 +35,8 @@ test.describe('Login Flow', () => {
     }
   });
 
-  test('should show 404 page for unknown routes', async ({ page }) => {
+  test('should redirect unknown routes to login', async ({ page }) => {
     await page.goto('/pagina-inexistente');
-    await expect(page.getByText(/Página não encontrada/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
   });
 });
