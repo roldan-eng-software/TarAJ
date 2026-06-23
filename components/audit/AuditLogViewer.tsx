@@ -25,6 +25,7 @@ const RESULT_COLORS: Record<string, string> = {
 
 export function AuditLogViewer() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [users, setUsers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
@@ -38,6 +39,7 @@ export function AuditLogViewer() {
       if (!res.ok) throw new Error('Failed to fetch audit logs');
       const data = await res.json();
       setLogs(data.logs || []);
+      setUsers(data.users || {});
     } catch (err) {
       setError('Erro ao carregar logs de auditoria.');
     } finally {
@@ -57,6 +59,8 @@ export function AuditLogViewer() {
 
   const formatActor = (log: AuditLog) => {
     if (log.actor === log.actorRole) return log.actorRole;
+    const displayName = users[log.actor];
+    if (displayName) return `${displayName} (${log.actorRole})`;
     return `${log.actor} (${log.actorRole})`;
   };
 
