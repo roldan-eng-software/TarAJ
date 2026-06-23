@@ -1,30 +1,6 @@
 import { describe, it, expect } from 'vitest';
-
-function generateDedupeKey(
-  eventType: string,
-  taskId: string,
-  recipientId: string,
-  version: number = 1
-): string {
-  return `${eventType}_${taskId}_${recipientId}_v${version}`;
-}
-
-const STAGE_ORDER: Record<string, number> = {
-  entrada: 0,
-  analise: 1,
-  aguardando_docs: 2,
-  andamento: 3,
-  revisao: 4,
-  concluida: 5,
-  arquivada: 6,
-};
-
-function isBackwardTransition(fromStage: string, toStage: string): boolean {
-  const from = STAGE_ORDER[fromStage];
-  const to = STAGE_ORDER[toStage];
-  if (from === undefined || to === undefined) return false;
-  return to < from;
-}
+import { generateDedupeKey } from '@/src/domain/notifications/notification-service';
+import { isBackwardTransition } from '@/src/domain/workflow/workflow-service';
 
 describe('Notification and Alert System', () => {
   describe('Deduplication keys', () => {
@@ -33,9 +9,9 @@ describe('Notification and Alert System', () => {
       expect(key).toBe('stage_changed_task_123_user_456_v1');
     });
 
-    it('should use version to differentiate repeated events', () => {
-      const v1 = generateDedupeKey('due_upcoming', 'task_123', 'user_456', 1);
-      const v2 = generateDedupeKey('due_upcoming', 'task_123', 'user_456', 2);
+    it('should use suffix to differentiate repeated events', () => {
+      const v1 = generateDedupeKey('due_upcoming', 'task_123', 'user_456', 'v1');
+      const v2 = generateDedupeKey('due_upcoming', 'task_123', 'user_456', 'v2');
       expect(v1).not.toBe(v2);
     });
 

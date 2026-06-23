@@ -35,6 +35,7 @@ export function isBackwardTransition(fromStage: StageId, toStage: StageId): bool
   ];
   const fromIndex = stages.indexOf(fromStage);
   const toIndex = stages.indexOf(toStage);
+  if (fromIndex === -1 || toIndex === -1) return false;
   return toIndex < fromIndex;
 }
 
