@@ -19,21 +19,29 @@ export type AlertEventType =
   | 'due_upcoming'
   | 'due_overdue';
 
+// Event types that can fire from cron/scheduled jobs and need deduplication
+const CRON_EVENT_TYPES = new Set<AlertEventType>(['due_upcoming', 'due_overdue']);
+
 /**
  * Create deduplication key for alert
- * Format: eventType_taskId_recipientId_version
+ * Format: eventType_taskId_recipientId_suffix
  */
 export function generateDedupeKey(
   eventType: AlertEventType,
   taskId: string,
   recipientId: string,
-  version: number = 1
+  suffix: string = 'v1'
 ): string {
-  return `${eventType}_${taskId}_${recipientId}_v${version}`;
+  return `${eventType}_${taskId}_${recipientId}_${suffix}`;
 }
 
 /**
  * Create an internal alert notification
+ *
+ * User-triggered events (stage_changed, responsible_changed, etc.) always create
+ * a new alert with a unique dedupeKey so no event is lost.
+ * Cron-triggered events (due_upcoming, due_overdue) use a stable dedupeKey
+ * and skip creation if an unread alert with the same key already exists.
  */
 export async function createAlert(
   eventType: AlertEventType,
@@ -44,24 +52,31 @@ export async function createAlert(
   metadata?: Record<string, unknown>
 ): Promise<Alert> {
   const now = new Date();
-  const dedupeKey = generateDedupeKey(eventType, taskId, recipientId);
 
-  // Check for existing unread alert with same dedup key
-  const existing = await adminDb
-    .collection('alerts')
-    .where('dedupeKey', '==', dedupeKey)
-    .where('readAt', '==', null)
-    .limit(1)
-    .get();
+  // Cron events use a stable dedupeKey to prevent spam across cron runs.
+  // User events include a timestamp suffix so every distinct action creates a new alert.
+  const isCronEvent = CRON_EVENT_TYPES.has(eventType);
+  const dedupeKey = isCronEvent
+    ? generateDedupeKey(eventType, taskId, recipientId)
+    : generateDedupeKey(eventType, taskId, recipientId, `${now.getTime()}`);
 
-  if (existing.size > 0) {
-    // Alert already exists and unread, don't duplicate
-    const doc = existing.docs[0];
-    return {
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt.toDate(),
-    } as Alert;
+  // Deduplication check only for cron events
+  if (isCronEvent) {
+    const existing = await adminDb
+      .collection('alerts')
+      .where('dedupeKey', '==', dedupeKey)
+      .where('readAt', '==', null)
+      .limit(1)
+      .get();
+
+    if (existing.size > 0) {
+      const doc = existing.docs[0];
+      return {
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt.toDate(),
+      } as Alert;
+    }
   }
 
   const alert: Omit<Alert, 'id'> = {

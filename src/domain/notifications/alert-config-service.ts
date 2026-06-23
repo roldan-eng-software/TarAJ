@@ -100,7 +100,7 @@ export async function createDefaultAlertConfig(
     eventType,
     enabled: true,
     notifyResponsible: true,
-    notifyCreator: false,
+    notifyCreator: true,
     notifyParticipants: false,
     notifyRoles: [],
     updatedAt: now,
