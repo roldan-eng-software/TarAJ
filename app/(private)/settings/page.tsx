@@ -5,7 +5,7 @@ import { auth } from '@/src/firebase/client';
 import { onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
-type Tab = 'profile' | 'password' | 'notifications';
+type Tab = 'profile' | 'password' | 'notifications' | 'access';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -13,6 +13,9 @@ export default function SettingsPage() {
   const [userEmail, setUserEmail] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
+
+  // Login history
+  const [lastLoginAt, setLastLoginAt] = useState<string | null>(null);
 
   // Profile state
   const [displayName, setDisplayName] = useState('');
@@ -61,6 +64,7 @@ export default function SettingsPage() {
         if (res.ok) {
           const data = await res.json();
           setDisplayName(data.displayName || '');
+          setLastLoginAt(data.lastLoginAt || null);
           if (data.notificationPrefs) {
             setEmailNotifications(data.notificationPrefs.emailNotifications ?? true);
             setEnabledEvents(data.notificationPrefs.enabledEvents || []);
@@ -199,6 +203,7 @@ export default function SettingsPage() {
     { id: 'profile' as Tab, label: 'Perfil' },
     { id: 'password' as Tab, label: 'Senha' },
     { id: 'notifications' as Tab, label: 'Notificações' },
+    { id: 'access' as Tab, label: 'Meus Acessos' },
   ];
 
   return (
@@ -321,6 +326,31 @@ export default function SettingsPage() {
               {notifLoading ? 'Salvando...' : 'Salvar preferências'}
             </button>
           </form>
+        </div>
+      )}
+
+      {tab === 'access' && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-1">Meus Acessos</h2>
+          <p className="text-sm text-gray-500 mb-4">Registro do seu último acesso ao sistema.</p>
+          <div className="space-y-2">
+            {lastLoginAt ? (
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <div>
+                  <p className="text-sm text-gray-900">Último login</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(lastLoginAt).toLocaleString('pt-BR', {
+                      day: '2-digit', month: 'long', year: 'numeric',
+                      hour: '2-digit', minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400">Nenhum registro de acesso disponível.</p>
+            )}
+          </div>
         </div>
       )}
 

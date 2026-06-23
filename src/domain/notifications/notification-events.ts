@@ -5,6 +5,10 @@ import { getRecipientsForEvent } from '@/src/domain/notifications/alert-config-s
 import { isBackwardTransition, getStageName } from '@/src/domain/workflow/workflow-service';
 import { adminDb } from '@/src/firebase/admin';
 import type { SessionUser, Task, StageId, AlertEventType } from '@/src/types/domain';
+import {
+  taskCreatedTemplate, taskAssignedTemplate, stageChangedTemplate,
+  mentionTemplate, completedTemplate, archivedTemplate, restoredTemplate,
+} from '@/src/domain/notifications/email-templates';
 
 async function resolveRecipientInfo(
   userId: string
@@ -70,14 +74,15 @@ export async function emitTaskCreatedAlert(
   task: Task,
   actor: SessionUser
 ): Promise<void> {
+  const tpl = taskCreatedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
   await notifyRecipients(
     task,
     'task_created',
     task.stageId,
     `Tarefa "${task.title}" foi criada por ${actor.displayName}`,
-    `[TarAJ] Nova tarefa: ${task.title}`,
-    `A tarefa "${task.title}" foi criada por ${actor.displayName}.`,
-    `<p>A tarefa <strong>"${task.title}"</strong> foi criada por ${actor.displayName}.</p>`,
+    tpl.subject,
+    tpl.text,
+    tpl.html,
     actor,
     { createdBy: actor.uid }
   );
@@ -87,14 +92,15 @@ export async function emitResponsibleChangedAlert(
   task: Task,
   actor: SessionUser
 ): Promise<void> {
+  const tpl = taskAssignedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
   await notifyRecipients(
     task,
     'responsible_changed',
     task.stageId,
     `Você foi designado responsável pela tarefa "${task.title}" por ${actor.displayName}`,
-    `[TarAJ] Responsável alterado: ${task.title}`,
-    `Você foi designado responsável pela tarefa "${task.title}" por ${actor.displayName}.`,
-    `<p>Você foi designado responsável pela tarefa <strong>"${task.title}"</strong> por ${actor.displayName}.</p>`,
+    tpl.subject,
+    tpl.text,
+    tpl.html,
     actor,
     { changedBy: actor.uid }
   );
@@ -109,18 +115,24 @@ export async function emitStageChangedAlert(
   const backward = isBackwardTransition(fromStageId, toStageId);
   const eventType: AlertEventType = backward ? 'stage_moved_backward' : 'stage_changed';
   const toStageName = getStageName(toStageId);
+  const fromStageName = getStageName(fromStageId);
   const message = backward
     ? `Tarefa "${task.title}" retornou para "${toStageName}" por ${actor.displayName}`
     : `Tarefa "${task.title}" mudou para "${toStageName}" por ${actor.displayName}`;
+
+  const tpl = stageChangedTemplate({
+    taskTitle: task.title, actorName: actor.displayName, taskId: task.id,
+    fromStage: fromStageName, toStage: toStageName, backward,
+  });
 
   await notifyRecipients(
     task,
     eventType,
     toStageId,
     message,
-    `[TarAJ] Estágio alterado: ${task.title}`,
-    `${message} por ${actor.displayName}.`,
-    `<p>${message} por ${actor.displayName}.</p>`,
+    tpl.subject,
+    tpl.text,
+    tpl.html,
     actor,
     { fromStage: fromStageId, toStage: toStageId }
   );
@@ -131,14 +143,15 @@ export async function emitMentionAlert(
   mentionedUserId: string,
   actor: SessionUser
 ): Promise<void> {
+  const tpl = mentionTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
   await notifyRecipients(
     task,
     'mentioned_in_comment',
     task.stageId,
     `Você foi mencionado por ${actor.displayName} na tarefa "${task.title}"`,
-    `[TarAJ] Menção: ${task.title}`,
-    `Você foi mencionado por ${actor.displayName} na tarefa "${task.title}".`,
-    `<p>Você foi mencionado por ${actor.displayName} na tarefa <strong>"${task.title}"</strong>.</p>`,
+    tpl.subject,
+    tpl.text,
+    tpl.html,
     actor,
     { mentionedBy: actor.uid }
   );
@@ -148,14 +161,15 @@ export async function emitTaskCompletedAlert(
   task: Task,
   actor: SessionUser
 ): Promise<void> {
+  const tpl = completedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
   await notifyRecipients(
     task,
     'task_completed',
     'concluida',
     `Tarefa "${task.title}" foi concluída por ${actor.displayName}`,
-    `[TarAJ] Tarefa concluída: ${task.title}`,
-    `A tarefa "${task.title}" foi concluída por ${actor.displayName}.`,
-    `<p>A tarefa <strong>"${task.title}"</strong> foi concluída por ${actor.displayName}.</p>`,
+    tpl.subject,
+    tpl.text,
+    tpl.html,
     actor,
     { completedBy: actor.uid }
   );
@@ -165,14 +179,15 @@ export async function emitTaskArchivedAlert(
   task: Task,
   actor: SessionUser
 ): Promise<void> {
+  const tpl = archivedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
   await notifyRecipients(
     task,
     'task_archived',
     'arquivada',
     `Tarefa "${task.title}" foi arquivada por ${actor.displayName}`,
-    `[TarAJ] Tarefa arquivada: ${task.title}`,
-    `A tarefa "${task.title}" foi arquivada por ${actor.displayName}.`,
-    `<p>A tarefa <strong>"${task.title}"</strong> foi arquivada por ${actor.displayName}.</p>`,
+    tpl.subject,
+    tpl.text,
+    tpl.html,
     actor,
     { archivedBy: actor.uid }
   );
@@ -183,14 +198,15 @@ export async function emitTaskRestoredAlert(
   actor: SessionUser,
   targetStageId: StageId
 ): Promise<void> {
+  const tpl = restoredTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id, targetStage: getStageName(targetStageId) });
   await notifyRecipients(
     task,
     'task_restored',
     targetStageId,
     `Tarefa "${task.title}" foi restaurada por ${actor.displayName}`,
-    `[TarAJ] Tarefa restaurada: ${task.title}`,
-    `A tarefa "${task.title}" foi restaurada por ${actor.displayName}.`,
-    `<p>A tarefa <strong>"${task.title}"</strong> foi restaurada por ${actor.displayName}.</p>`,
+    tpl.subject,
+    tpl.text,
+    tpl.html,
     actor,
     { restoredBy: actor.uid, targetStage: targetStageId }
   );

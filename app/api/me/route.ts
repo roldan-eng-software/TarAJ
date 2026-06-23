@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
       displayName: data.displayName,
       email: data.email,
       roleId: data.roleId,
+      lastLoginAt: data.lastLoginAt?.toDate?.()?.toISOString() || null,
       notificationPrefs: prefs || null,
     });
   } catch (error) {

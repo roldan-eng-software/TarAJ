@@ -54,7 +54,11 @@ export default function PrivateLayout({
   if (checking) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-500">Verificando autenticação...</p>
+        <div className="space-y-4 w-64">
+          <div className="h-8 bg-gray-200 animate-pulse rounded" />
+          <div className="h-4 bg-gray-200 animate-pulse rounded w-3/4" />
+          <div className="h-4 bg-gray-200 animate-pulse rounded w-1/2" />
+        </div>
       </div>
     );
   }
@@ -70,7 +74,7 @@ export default function PrivateLayout({
     { href: '/alerts', label: 'Alertas', showBadge: true },
     { href: '/archive', label: 'Arquivo' },
     { href: '/settings', label: 'Config' },
-    ...(isAdmin ? [{ href: '/admin/users', label: 'Usuários' }, { href: '/admin/audit-logs', label: 'Auditoria' }, { href: '/admin/email-jobs', label: 'Email Jobs' }, { href: '/admin/alert-settings', label: 'Alertas' }, { href: '/admin/categories', label: 'Categorias' }] : []),
+    ...(isAdmin ? [{ href: '/admin', label: 'Admin' }, { href: '/admin/users', label: 'Usuários' }, { href: '/admin/audit-logs', label: 'Auditoria' }, { href: '/admin/email-jobs', label: 'Email Jobs' }, { href: '/admin/alert-settings', label: 'Alertas' }, { href: '/admin/categories', label: 'Categorias' }] : []),
   ];
 
   const handleLogout = async () => {

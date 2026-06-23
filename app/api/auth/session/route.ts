@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { getSessionUser } from '@/src/domain/auth/auth-service';
 import { checkRateLimit, getRateLimitHeaders } from '@/src/lib/rate-limit';
 import { logLoginAttempt } from '@/src/domain/audit/audit-service';
+import { adminDb } from '@/src/firebase/admin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,6 +56,10 @@ export async function POST(request: NextRequest) {
     if (email) {
       await logLoginAttempt(email, true);
     }
+
+    await adminDb.collection('users').doc(sessionUser.uid).update({
+      lastLoginAt: new Date(),
+    }).catch(() => {});
 
     const response = NextResponse.json(sessionUser);
 

@@ -3,6 +3,7 @@ import { createAlert } from '@/src/domain/notifications/notification-service';
 import { sendEmail } from '@/src/domain/notifications/email-sender';
 import { queueEmail } from '@/src/domain/notifications/email-queue-service';
 import { getRecipientsForEvent } from '@/src/domain/notifications/alert-config-service';
+import { dueDateUpcomingTemplate, dueDateOverdueTemplate } from '@/src/domain/notifications/email-templates';
 import type { Task, StageId } from '@/src/types/domain';
 
 export async function getUpcomingDueTasks(daysAhead: number = 3): Promise<Task[]> {
@@ -128,14 +129,15 @@ export async function alertUpcomingDueTasks(daysAhead: number = 3): Promise<numb
     );
 
     for (const { userId } of recipients) {
+      const tpl = dueDateUpcomingTemplate({ taskTitle: task.title, actorName: 'Sistema', taskId: task.id, dueDate: task.dueDate.toISOString().split('T')[0] });
       await notifyRecipient(
         userId,
         'due_upcoming',
         task.id,
         message,
-        buildEmailSubject(task.title, daysUntilDue),
-        `${message}.`,
-        `<p>${message}.</p>`,
+        tpl.subject,
+        tpl.text,
+        tpl.html,
         { taskId: task.id, daysUntil: daysUntilDue }
       );
       alertCount++;
@@ -164,14 +166,15 @@ export async function alertOverdueTasks(): Promise<number> {
     );
 
     for (const { userId } of recipients) {
+      const tpl = dueDateOverdueTemplate({ taskTitle: task.title, actorName: 'Sistema', taskId: task.id, dueDate: task.dueDate.toISOString().split('T')[0] });
       await notifyRecipient(
         userId,
         'due_overdue',
         task.id,
         message,
-        `[TarAJ] Vencida: ${task.title}`,
-        `${message}.`,
-        `<p>${message}.</p>`,
+        tpl.subject,
+        tpl.text,
+        tpl.html,
         { taskId: task.id, daysSinceDue }
       );
       alertCount++;
