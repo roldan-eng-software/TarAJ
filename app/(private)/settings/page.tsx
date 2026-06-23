@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { auth } from '@/src/firebase/client';
+import { getAuthInstance } from '@/src/firebase/client';
 import { onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
@@ -50,7 +50,7 @@ export default function SettingsPage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(getAuthInstance(), async (user) => {
       if (!user) {
         router.push('/login');
         return;
@@ -131,7 +131,7 @@ export default function SettingsPage() {
     setPasswordLoading(true);
 
     try {
-      const user = auth.currentUser;
+      const user = getAuthInstance().currentUser;
       if (!user || !user.email) {
         setPasswordMessage({ type: 'error', text: 'Usuário não autenticado.' });
         return;
