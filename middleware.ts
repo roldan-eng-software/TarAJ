@@ -6,7 +6,7 @@ const publicApiPaths = ['/api/auth/session'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('token')?.value;
+  const token = request.cookies.get('session')?.value;
 
   const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + '/'));
   const isPublicApi = publicApiPaths.some((p) => pathname.startsWith(p));

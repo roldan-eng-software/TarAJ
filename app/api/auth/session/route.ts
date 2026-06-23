@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getSessionUser } from '@/src/domain/auth/auth-service';
+import { adminAuth, adminDb } from '@/src/firebase/admin';
+import { getSessionUserFromCookie } from '@/src/domain/auth/auth-service';
 import { checkRateLimit, getRateLimitHeaders } from '@/src/lib/rate-limit';
 import { logLoginAttempt } from '@/src/domain/audit/audit-service';
-import { adminDb } from '@/src/firebase/admin';
+
+const SESSION_MAX_AGE = 14 * 24 * 60 * 60; // 14 days in seconds
+const SESSION_EXPIRES_MS = 14 * 24 * 60 * 60 * 1000; // 14 days in ms
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,30 +24,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let token: string | null = null;
+    let idToken: string | null = null;
     let email: string | null = null;
 
     const contentType = request.headers.get('content-type') || '';
 
     if (contentType.includes('application/json')) {
       const body = await request.json().catch(() => ({}));
-      token = body.idToken || null;
+      idToken = body.idToken || null;
       email = body.email || null;
     }
 
-    if (!token) {
+    if (!idToken) {
       const authHeader = request.headers.get('authorization');
-      token = authHeader?.replace('Bearer ', '') || null;
+      idToken = authHeader?.replace('Bearer ', '') || null;
     }
 
-    if (!token) {
+    if (!idToken) {
       if (email) {
         await logLoginAttempt(email, false, 'No token provided');
       }
       return NextResponse.json({ error: 'No token provided' }, { status: 401 });
     }
 
-    const sessionUser = await getSessionUser(token);
+    const sessionCookie = await adminAuth.createSessionCookie(idToken, {
+      expiresIn: SESSION_EXPIRES_MS,
+    });
+
+    const sessionUser = await getSessionUserFromCookie(sessionCookie);
 
     if (!sessionUser) {
       if (email) {
@@ -63,12 +70,12 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json(sessionUser);
 
-    response.cookies.set('token', token, {
+    response.cookies.set('session', sessionCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 86400,
+      maxAge: SESSION_MAX_AGE,
     });
 
     return response;
@@ -78,29 +85,15 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE() {
-  const response = NextResponse.json({ ok: true });
-
-  response.cookies.set('token', '', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 0,
-  });
-
-  return response;
-}
-
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
+    const sessionCookie = request.cookies.get('session')?.value;
 
-    if (!token) {
+    if (!sessionCookie) {
       return NextResponse.json({ error: 'No session' }, { status: 401 });
     }
 
-    const sessionUser = await getSessionUser(token);
+    const sessionUser = await getSessionUserFromCookie(sessionCookie);
 
     if (!sessionUser) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
@@ -111,4 +104,18 @@ export async function GET(request: NextRequest) {
     console.error('Session GET error:', error);
     return NextResponse.json({ error: 'Session error' }, { status: 500 });
   }
+}
+
+export async function DELETE() {
+  const response = NextResponse.json({ ok: true });
+
+  response.cookies.set('session', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+
+  return response;
 }

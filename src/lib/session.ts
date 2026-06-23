@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { getSessionUser } from '@/src/domain/auth/auth-service';
+import { getSessionUser, getSessionUserFromCookie } from '@/src/domain/auth/auth-service';
 import type { SessionUser } from '@/src/types/domain';
 
 export async function getSessionFromRequest(
@@ -10,9 +10,9 @@ export async function getSessionFromRequest(
     return getSessionUser(authHeader.slice(7));
   }
 
-  const cookieToken = request.cookies.get('token')?.value;
-  if (cookieToken) {
-    return getSessionUser(cookieToken);
+  const sessionCookie = request.cookies.get('session')?.value;
+  if (sessionCookie) {
+    return getSessionUserFromCookie(sessionCookie);
   }
 
   return null;
