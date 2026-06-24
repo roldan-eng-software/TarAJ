@@ -38,6 +38,7 @@ export async function createTask(
     createdBy: creator.uid,
     updatedAt: now,
     updatedBy: creator.uid,
+    lastActivityAt: now,
   };
 
     const ref = await adminDb.collection('tasks').add(taskData);
@@ -189,6 +190,7 @@ export async function updateTask(
     dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
     updatedAt: now,
     updatedBy: updater.uid,
+    lastActivityAt: now,
   };
 
   await adminDb.collection('tasks').doc(taskId).update(updates);

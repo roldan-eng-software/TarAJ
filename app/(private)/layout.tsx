@@ -68,6 +68,7 @@ export default function PrivateLayout({
   }
 
   const isAdmin = userRole === 'administrator';
+  const isAdminOrCoordinator = isAdmin || userRole === 'coordinator';
 
   const navLinks = [
     { href: '/kanban', label: 'Kanban' },
@@ -75,6 +76,7 @@ export default function PrivateLayout({
     { href: '/archive', label: 'Arquivo' },
     { href: '/settings', label: 'Config' },
     ...(isAdmin ? [{ href: '/admin', label: 'Admin' }, { href: '/admin/users', label: 'Usuários' }, { href: '/admin/audit-logs', label: 'Auditoria' }, { href: '/admin/email-jobs', label: 'Email Jobs' }, { href: '/admin/alert-settings', label: 'Regras de Alertas' }, { href: '/admin/categories', label: 'Categorias' }] : []),
+    ...(isAdminOrCoordinator ? [{ href: '/admin/inactivity-settings', label: 'Inatividade' }] : []),
   ];
 
   const handleLogout = async () => {

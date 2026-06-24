@@ -61,6 +61,10 @@ const EVENT_CATEGORIES: { label: string; events: AlertEventType[] }[] = [
     label: 'Menção',
     events: ['mentioned_in_comment'],
   },
+  {
+    label: 'Inatividade',
+    events: ['inactivity_alert'],
+  },
 ];
 
 const EVENT_LABELS: Record<string, string> = {
@@ -74,6 +78,7 @@ const EVENT_LABELS: Record<string, string> = {
   due_upcoming: 'Prazo próximo',
   due_overdue: 'Prazo vencido',
   mentioned_in_comment: 'Menção em comentário',
+  inactivity_alert: 'Tarefa inativa',
 };
 
 function StageCard({

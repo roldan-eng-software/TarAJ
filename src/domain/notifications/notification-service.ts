@@ -17,10 +17,11 @@ export type AlertEventType =
   | 'task_archived'
   | 'task_restored'
   | 'due_upcoming'
-  | 'due_overdue';
+  | 'due_overdue'
+  | 'inactivity_alert';
 
 // Event types that can fire from cron/scheduled jobs and need deduplication
-const CRON_EVENT_TYPES = new Set<AlertEventType>(['due_upcoming', 'due_overdue']);
+const CRON_EVENT_TYPES = new Set<AlertEventType>(['due_upcoming', 'due_overdue', 'inactivity_alert']);
 
 /**
  * Create deduplication key for alert

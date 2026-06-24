@@ -55,6 +55,11 @@ export async function uploadAttachment(
     .doc(attachmentId)
     .set(metadata);
 
+  // Update task lastActivityAt
+  await adminDb.collection('tasks').doc(taskId).update({
+    lastActivityAt: now,
+  });
+
   await recordHistoryEvent(taskId, 'attachment_added', uploader.uid, uploader.roleId, {
     attachmentId,
     fileName,

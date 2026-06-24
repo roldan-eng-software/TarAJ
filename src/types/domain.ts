@@ -81,6 +81,7 @@ export interface Task {
   updatedAt: Date;
   updatedBy: string;
   completedAt?: Date;
+  lastActivityAt?: Date;
 }
 
 export type HistoryEventType =
@@ -139,7 +140,8 @@ export type AlertEventType =
   | 'task_restored'
   | 'mentioned'
   | 'mentioned_in_comment'
-  | 'backward_move';
+  | 'backward_move'
+  | 'inactivity_alert';
 
 export interface Alert {
   id: string;

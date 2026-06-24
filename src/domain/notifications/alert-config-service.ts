@@ -21,6 +21,7 @@ const CONFIGURABLE_EVENT_TYPES: AlertEventType[] = [
   'task_archived',
   'task_restored',
   'mentioned_in_comment',
+  'inactivity_alert',
 ];
 
 function generateConfigId(stageId: StageId, eventType: AlertEventType): string {

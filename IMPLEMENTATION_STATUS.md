@@ -2,7 +2,7 @@
 
 **Project**: Sistema Kanban Jurídico Interno  
 **Date**: 2026-06-24  
-**Status**: MVP COMPLETE (100%)
+**Status**: MVP COMPLETE + Inactivity Alerts
 
 ## Completed Work Summary
 
@@ -124,6 +124,18 @@
 - Task filters component — `components/tasks/TaskFilters.tsx`
 - Pagination on archive and alerts pages — `components/ui/Pagination.tsx`
 
+### Inactivity Alerts ✅ COMPLETE
+- `lastActivityAt` field on tasks, updated on create/edit/stage change/comment/attachment
+- Global inactivity config (days threshold, enabled toggle) — `src/domain/notifications/inactivity-config.ts`
+- Inactivity scan service with deduplication — `src/domain/notifications/inactivity-service.ts`
+- Cron endpoint `/api/cron/inactivity-check` — `app/api/cron/inactivity-check/route.ts`
+- Config API (GET/PATCH) for admin and coordinator — `app/api/admin/inactivity-config/route.ts`
+- Settings page with days threshold and enable toggle — `app/(private)/admin/inactivity-settings/`
+- `inactivity_alert` event type in alert-config system (configurable recipients per stage)
+- Email template for inactivity alerts — `src/domain/notifications/email-templates.ts`
+- Navigation link visible to admin and coordinator
+- 13 unit tests for inactivity system
+
 ## Architecture Highlights
 
 ### Security by Design
@@ -137,11 +149,11 @@
 - ✅ Security HTTP headers via middleware
 
 ### Code Organization
-- 21 domain service files across 10 subdirectories
-- 29 Route Handler files
-- 14 private pages (including admin)
+- 24 domain service files across 10 subdirectories
+- 30 Route Handler files
+- 15 private pages (including admin)
 - 15+ React components
-- 14 test files (228 tests passing)
+- 15 test files (241 tests passing)
 - Clear separation of concerns
 - Type-safe throughout
 
@@ -149,10 +161,10 @@
 
 | Suite | Count | Status |
 |-------|-------|--------|
-| Unit tests (RBAC, workflow, history, notifications, archive, email-templates) | 6 files | ✅ Passing |
+| Unit tests (RBAC, workflow, history, notifications, archive, email-templates, inactivity) | 7 files | ✅ Passing |
 | Contract tests (tasks, comments/attachments, alerts, admin, me) | 5 files | ✅ Passing |
 | Integration tests (Kanban, Firestore rules, quickstart) | 3 files | ✅ Passing |
-| **Total** | **14 files, 228 tests** | **✅ All passing** |
+| **Total** | **15 files, 241 tests** | **✅ All passing** |
 
 ## Quality Gates
 
@@ -160,7 +172,7 @@
 |------|--------|
 | TypeScript strict (`tsc --noEmit`) | ✅ 0 errors |
 | ESLint (`--max-warnings 0`) | ✅ 0 errors, 0 warnings |
-| Tests (`npm test`) | ✅ 228 passing |
+| Tests (`npm test`) | ✅ 241 passing |
 | Build (`npm run build`) | ✅ Clean |
 
 ## Known Future Improvements (not blocking)

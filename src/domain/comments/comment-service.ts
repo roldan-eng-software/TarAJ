@@ -60,6 +60,11 @@ export async function createComment(
     .collection('comments')
     .add(comment);
 
+  // Update task lastActivityAt
+  await adminDb.collection('tasks').doc(taskId).update({
+    lastActivityAt: now,
+  });
+
   // Record history event
   await recordHistoryEvent(taskId, 'comment_added', author.uid, author.roleId, {
     commentId: ref.id,

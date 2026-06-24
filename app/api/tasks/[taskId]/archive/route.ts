@@ -39,6 +39,7 @@ export async function POST(
       archivedAt: now,
       updatedAt: now,
       updatedBy: session.uid,
+      lastActivityAt: now,
     });
 
     const updatedTask = await getTask(taskId);

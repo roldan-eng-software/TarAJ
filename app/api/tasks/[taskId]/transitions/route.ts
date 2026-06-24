@@ -54,6 +54,7 @@ export async function POST(
       stageId: targetStageId,
       updatedAt: new Date(),
       updatedBy: session.uid,
+      lastActivityAt: new Date(),
       ...(targetStageId === 'concluida' ? { completedAt: new Date() } : {}),
     });
 

@@ -32,6 +32,7 @@ export function taskFromFirestore(id: string, data: Record<string, unknown>): Ta
     updatedAt: parseDate(data.updatedAt) || new Date(),
     updatedBy: data.updatedBy as string,
     completedAt: parseDate(data.completedAt),
+    lastActivityAt: parseDate(data.lastActivityAt),
   };
 }
 
@@ -50,6 +51,7 @@ export function taskToFirestore(task: Partial<Task>): Record<string, unknown> {
   if (task.updatedAt) data.updatedAt = task.updatedAt;
   if (task.archivedAt) data.archivedAt = task.archivedAt;
   if (task.completedAt) data.completedAt = task.completedAt;
+  if (task.lastActivityAt) data.lastActivityAt = task.lastActivityAt;
   return data;
 }
 

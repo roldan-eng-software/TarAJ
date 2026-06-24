@@ -190,6 +190,22 @@ export function dueDateOverdueTemplate(input: TemplateInput & { dueDate: string 
   return { subject, text, html };
 }
 
+export function inactivityAlertTemplate(input: TemplateInput & { daysInactive: number }): { subject: string; text: string; html: string } {
+  const subject = `[TarAJ] Tarefa inativa: ${input.taskTitle}`;
+  const text = `A tarefa "${input.taskTitle}" está sem movimentação há ${input.daysInactive} dias.`;
+  const html = baseTemplate(`
+    <p style="margin-top:0">Olá,</p>
+    <p>Uma tarefa está <strong>sem movimentação</strong> há ${input.daysInactive} dias.</p>
+    <p>${taskLine(input.taskTitle)}</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0">
+      <tr><td style="padding:6px 0;color:#64748b;width:120px">Dias sem atividade</td><td style="padding:6px 0"><span class="tag tag-amber">${input.daysInactive} dias</span></td></tr>
+    </table>
+    <p>Por favor, verifique o andamento desta tarefa e tome as providências necessárias.</p>
+    <p><a href="${getAppUrl()}/tasks/${input.taskId}" class="btn">Ver tarefa</a></p>
+  `);
+  return { subject, text, html };
+}
+
 function getAppUrl(): string {
   return process.env.APP_URL || 'http://localhost:3000';
 }
