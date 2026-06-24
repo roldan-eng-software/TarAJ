@@ -237,6 +237,7 @@ export default function AlertSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [reseeding, setReseeding] = useState(false);
 
   const fetchConfigs = useCallback(async () => {
     try {
@@ -264,6 +265,24 @@ export default function AlertSettingsPage() {
       setLoading(false);
     }
   }, [router]);
+
+  const handleReseed = async () => {
+    if (!confirm('Isso irá recriar todas as configurações de alerta ausentes. As configurações existentes não serão alteradas. Continuar?')) return;
+    setReseeding(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/alert-config/seed', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Falha ao recriar configurações');
+      await fetchConfigs();
+    } catch {
+      setError('Falha ao recriar configurações de alerta');
+    } finally {
+      setReseeding(false);
+    }
+  };
 
   useEffect(() => {
     fetchConfigs();
@@ -297,11 +316,20 @@ export default function AlertSettingsPage() {
   return (
     <div className="p-4 md:p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Configuração de Alertas</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Defina quais eventos disparam alertas e quem os recebe, por estágio do Kanban
-        </p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Configuração de Alertas</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Defina quais eventos disparam alertas e quem os recebe, por estágio do Kanban
+          </p>
+        </div>
+        <button
+          onClick={handleReseed}
+          disabled={reseeding}
+          className="px-4 py-2 text-sm font-medium text-sky-600 border border-sky-300 rounded-lg hover:bg-sky-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        >
+          {reseeding ? 'Recriando...' : 'Recriar configurações'}
+        </button>
       </div>
 
       {/* Error */}

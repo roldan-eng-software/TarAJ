@@ -6,6 +6,7 @@ import {
   updateAlertConfig,
   getConfigurableEvents,
   getConfigurableStages,
+  seedDefaultAlertConfigs,
 } from '@/src/domain/notifications/alert-config-service';
 import { logAudit } from '@/src/domain/audit/audit-service';
 import type { RoleId } from '@/src/types/domain';
@@ -21,11 +22,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
-    const configs = await getAllAlertConfigs();
+    let configs = await getAllAlertConfigs();
+
+    // Auto-seed if no configs exist (first visit or fresh database)
+    if (configs.length === 0) {
+      const seeded = await seedDefaultAlertConfigs(session.uid);
+      if (seeded > 0) {
+        console.log(`Auto-seeded ${seeded} default alert configs for admin ${session.uid}`);
+        configs = await getAllAlertConfigs();
+      }
+    }
+
     const eventTypes = getConfigurableEvents();
     const stageIds = getConfigurableStages();
 
-    return NextResponse.json({ configs, eventTypes, stageIds });
+    return NextResponse.json({ configs, eventTypes, stageIds, autoSeeded: configs.length > 0 });
   } catch (error) {
     console.error('Error fetching alert configs:', error);
     return NextResponse.json({ error: 'Failed to fetch alert configs' }, { status: 500 });
