@@ -2,8 +2,10 @@ import { adminDb } from '@/src/firebase/admin';
 import { createAlert } from '@/src/domain/notifications/notification-service';
 import { sendEmail } from '@/src/domain/notifications/email-sender';
 import { queueEmail } from '@/src/domain/notifications/email-queue-service';
+import { sendWhatsAppNotification } from '@/src/domain/notifications/whatsapp-sender';
 import { getRecipientsForEvent } from '@/src/domain/notifications/alert-config-service';
 import { inactivityAlertTemplate } from '@/src/domain/notifications/email-templates';
+import { whatsappInactivityAlertTemplate } from '@/src/domain/notifications/whatsapp-templates';
 import { getInactivityConfig } from '@/src/domain/notifications/inactivity-config';
 import type { Task, StageId } from '@/src/types/domain';
 
@@ -57,7 +59,8 @@ async function notifyRecipient(
   emailSubject: string,
   emailBody: string,
   emailHtml: string,
-  metadata: Record<string, unknown>
+  metadata: Record<string, unknown>,
+  whatsappMessage?: string
 ): Promise<void> {
   await createAlert('inactivity_alert', taskId, userId, 'Sistema', message, metadata);
 
@@ -76,6 +79,10 @@ async function notifyRecipient(
         taskId,
         eventType: 'inactivity_alert',
       });
+    }
+
+    if (whatsappMessage) {
+      await sendWhatsAppNotification(userId, whatsappMessage, { ...metadata, taskId, eventType: 'inactivity_alert' });
     }
   }
 }
@@ -104,6 +111,12 @@ export async function alertInactiveTasks(daysThreshold: number): Promise<number>
         taskId: task.id,
         daysInactive,
       });
+      const whatsappMsg = whatsappInactivityAlertTemplate({
+        taskTitle: task.title,
+        actorName: 'Sistema',
+        taskId: task.id,
+        daysInactive,
+      });
       await notifyRecipient(
         userId,
         task.id,
@@ -111,7 +124,8 @@ export async function alertInactiveTasks(daysThreshold: number): Promise<number>
         tpl.subject,
         tpl.text,
         tpl.html,
-        { taskId: task.id, daysInactive }
+        { taskId: task.id, daysInactive },
+        whatsappMsg
       );
       alertCount++;
     }

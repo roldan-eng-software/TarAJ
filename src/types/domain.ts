@@ -27,6 +27,7 @@ export interface User {
   id: string;
   displayName: string;
   email: string;
+  phone?: string;
   roleId: RoleId;
   status: 'active' | 'disabled';
   permissions?: PermissionAction[];
@@ -246,4 +247,26 @@ export interface EmailJob {
   createdAt: Date;
   sentAt: Date | null;
   error: string | null;
+}
+
+export interface WhatsAppJob {
+  id: string;
+  recipientPhone: string;
+  recipientName: string;
+  message: string;
+  metadata?: Record<string, unknown>;
+  status: 'pending' | 'sent' | 'failed';
+  attempts: number;
+  maxAttempts: number;
+  createdAt: Date;
+  sentAt: Date | null;
+  error: string | null;
+}
+
+export interface WhatsAppConfig {
+  enabled: boolean;
+  apiUrl: string;
+  apiKey?: string;
+  updatedAt: Date;
+  updatedBy: string;
 }

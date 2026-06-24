@@ -75,7 +75,7 @@ export default function PrivateLayout({
     { href: '/alerts', label: 'Alertas', showBadge: true },
     { href: '/archive', label: 'Arquivo' },
     { href: '/settings', label: 'Config' },
-    ...(isAdmin ? [{ href: '/admin', label: 'Admin' }, { href: '/admin/users', label: 'Usuários' }, { href: '/admin/audit-logs', label: 'Auditoria' }, { href: '/admin/email-jobs', label: 'Email Jobs' }, { href: '/admin/alert-settings', label: 'Regras de Alertas' }, { href: '/admin/categories', label: 'Categorias' }] : []),
+    ...(isAdmin ? [{ href: '/admin', label: 'Admin' }, { href: '/admin/users', label: 'Usuários' }, { href: '/admin/audit-logs', label: 'Auditoria' }, { href: '/admin/email-jobs', label: 'Email Jobs' }, { href: '/admin/whatsapp-jobs', label: 'WhatsApp Jobs' }, { href: '/admin/alert-settings', label: 'Regras de Alertas' }, { href: '/admin/categories', label: 'Categorias' }, { href: '/admin/whatsapp-settings', label: 'WhatsApp Config' }] : []),
     ...(isAdminOrCoordinator ? [{ href: '/admin/inactivity-settings', label: 'Inatividade' }] : []),
   ];
 

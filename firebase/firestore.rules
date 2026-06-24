@@ -80,6 +80,12 @@ service cloud.firestore {
       allow write: if false; // Managed by server functions
     }
 
+    // WhatsApp queue: admin read, server-side write
+    match /whatsappQueue/{jobId} {
+      allow read: if request.auth != null && hasRole(request.auth.uid, ['administrator']);
+      allow write: if false; // Managed by server functions
+    }
+
     // Notification preferences: user can read/write their own
     match /notificationPreferences/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;

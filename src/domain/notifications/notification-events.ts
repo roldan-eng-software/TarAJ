@@ -1,6 +1,7 @@
 import { createAlert } from '@/src/domain/notifications/notification-service';
 import { sendEmail } from '@/src/domain/notifications/email-sender';
 import { queueEmail } from '@/src/domain/notifications/email-queue-service';
+import { sendWhatsAppNotification } from '@/src/domain/notifications/whatsapp-sender';
 import { getRecipientsForEvent } from '@/src/domain/notifications/alert-config-service';
 import { isBackwardTransition, getStageName } from '@/src/domain/workflow/workflow-service';
 import { adminDb } from '@/src/firebase/admin';
@@ -9,16 +10,20 @@ import {
   taskCreatedTemplate, taskAssignedTemplate, stageChangedTemplate,
   mentionTemplate, completedTemplate, archivedTemplate, restoredTemplate,
 } from '@/src/domain/notifications/email-templates';
+import {
+  whatsappTaskCreatedTemplate, whatsappTaskAssignedTemplate, whatsappStageChangedTemplate,
+  whatsappMentionTemplate, whatsappCompletedTemplate, whatsappArchivedTemplate, whatsappRestoredTemplate,
+} from '@/src/domain/notifications/whatsapp-templates';
 
 async function resolveRecipientInfo(
   userId: string
-): Promise<{ email: string; displayName: string } | null> {
+): Promise<{ email: string; displayName: string; phone?: string } | null> {
   try {
     const doc = await adminDb.collection('users').doc(userId).get();
     if (!doc.exists) return null;
     const data = doc.data();
     if (!data?.email) return null;
-    return { email: data.email, displayName: data.displayName || '' };
+    return { email: data.email, displayName: data.displayName || '', phone: data.phone };
   } catch {
     return null;
   }
@@ -33,7 +38,8 @@ async function notifyRecipients(
   emailBody: string,
   emailHtml: string,
   actor: SessionUser,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  whatsappMessage?: string
 ): Promise<void> {
   const recipients = await getRecipientsForEvent(configStageId, eventType, task);
 
@@ -68,6 +74,10 @@ async function notifyRecipients(
           { ...metadata, taskId: task.id, eventType, smtpError: errorMessage }
         );
       }
+
+      if (whatsappMessage && info.phone) {
+        await sendWhatsAppNotification(userId, whatsappMessage, { ...metadata, taskId: task.id, eventType });
+      }
     }
   }
 }
@@ -77,6 +87,7 @@ export async function emitTaskCreatedAlert(
   actor: SessionUser
 ): Promise<void> {
   const tpl = taskCreatedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
+  const whatsappMsg = whatsappTaskCreatedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
   await notifyRecipients(
     task,
     'task_created',
@@ -86,7 +97,8 @@ export async function emitTaskCreatedAlert(
     tpl.text,
     tpl.html,
     actor,
-    { createdBy: actor.uid }
+    { createdBy: actor.uid },
+    whatsappMsg
   );
 }
 
@@ -95,6 +107,7 @@ export async function emitResponsibleChangedAlert(
   actor: SessionUser
 ): Promise<void> {
   const tpl = taskAssignedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
+  const whatsappMsg = whatsappTaskAssignedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
   await notifyRecipients(
     task,
     'responsible_changed',
@@ -104,7 +117,8 @@ export async function emitResponsibleChangedAlert(
     tpl.text,
     tpl.html,
     actor,
-    { changedBy: actor.uid }
+    { changedBy: actor.uid },
+    whatsappMsg
   );
 }
 
@@ -127,6 +141,11 @@ export async function emitStageChangedAlert(
     fromStage: fromStageName, toStage: toStageName, backward,
   });
 
+  const whatsappMsg = whatsappStageChangedTemplate({
+    taskTitle: task.title, actorName: actor.displayName, taskId: task.id,
+    fromStage: fromStageName, toStage: toStageName, backward,
+  });
+
   await notifyRecipients(
     task,
     eventType,
@@ -136,7 +155,8 @@ export async function emitStageChangedAlert(
     tpl.text,
     tpl.html,
     actor,
-    { fromStage: fromStageId, toStage: toStageId }
+    { fromStage: fromStageId, toStage: toStageId },
+    whatsappMsg
   );
 }
 
@@ -146,6 +166,7 @@ export async function emitMentionAlert(
   actor: SessionUser
 ): Promise<void> {
   const tpl = mentionTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
+  const whatsappMsg = whatsappMentionTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
   await notifyRecipients(
     task,
     'mentioned_in_comment',
@@ -155,7 +176,8 @@ export async function emitMentionAlert(
     tpl.text,
     tpl.html,
     actor,
-    { mentionedBy: actor.uid }
+    { mentionedBy: actor.uid },
+    whatsappMsg
   );
 }
 
@@ -164,6 +186,7 @@ export async function emitTaskCompletedAlert(
   actor: SessionUser
 ): Promise<void> {
   const tpl = completedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
+  const whatsappMsg = whatsappCompletedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
   await notifyRecipients(
     task,
     'task_completed',
@@ -173,7 +196,8 @@ export async function emitTaskCompletedAlert(
     tpl.text,
     tpl.html,
     actor,
-    { completedBy: actor.uid }
+    { completedBy: actor.uid },
+    whatsappMsg
   );
 }
 
@@ -182,6 +206,7 @@ export async function emitTaskArchivedAlert(
   actor: SessionUser
 ): Promise<void> {
   const tpl = archivedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
+  const whatsappMsg = whatsappArchivedTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id });
   await notifyRecipients(
     task,
     'task_archived',
@@ -191,7 +216,8 @@ export async function emitTaskArchivedAlert(
     tpl.text,
     tpl.html,
     actor,
-    { archivedBy: actor.uid }
+    { archivedBy: actor.uid },
+    whatsappMsg
   );
 }
 
@@ -201,6 +227,7 @@ export async function emitTaskRestoredAlert(
   targetStageId: StageId
 ): Promise<void> {
   const tpl = restoredTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id, targetStage: getStageName(targetStageId) });
+  const whatsappMsg = whatsappRestoredTemplate({ taskTitle: task.title, actorName: actor.displayName, taskId: task.id, targetStage: getStageName(targetStageId) });
   await notifyRecipients(
     task,
     'task_restored',
@@ -210,6 +237,7 @@ export async function emitTaskRestoredAlert(
     tpl.text,
     tpl.html,
     actor,
-    { restoredBy: actor.uid, targetStage: targetStageId }
+    { restoredBy: actor.uid, targetStage: targetStageId },
+    whatsappMsg
   );
 }

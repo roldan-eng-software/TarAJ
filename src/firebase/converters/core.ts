@@ -60,6 +60,7 @@ export function userFromFirestore(id: string, data: Record<string, unknown>): Us
     id,
     displayName: data.displayName as string,
     email: data.email as string,
+    phone: data.phone as string | undefined,
     roleId: data.roleId as RoleId,
     status: (data.status as User['status']) || 'active',
     permissions: data.permissions as User['permissions'],

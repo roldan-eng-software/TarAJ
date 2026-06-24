@@ -2,7 +2,7 @@
 
 **Project**: Sistema Kanban Jurídico Interno  
 **Date**: 2026-06-24  
-**Status**: MVP COMPLETE + Inactivity Alerts
+**Status**: MVP COMPLETE + Inactivity Alerts + WhatsApp Alerts
 
 ## Completed Work Summary
 
@@ -136,6 +136,25 @@
 - Navigation link visible to admin and coordinator
 - 13 unit tests for inactivity system
 
+### WhatsApp Alerts ✅ COMPLETE
+- WhatsAppJob and WhatsAppConfig types — `src/types/domain.ts`
+- `phone` field on User type for WhatsApp delivery
+- WhatsApp templates (10 event types) — `src/domain/notifications/whatsapp-templates.ts`
+- WhatsApp sender service (HTTP API to external Baileys service) — `src/domain/notifications/whatsapp-sender.ts`
+- WhatsApp config service (systemSettings/whatsapp) — `src/domain/notifications/whatsapp-config.ts`
+- WhatsApp queue service with retry (max 3 attempts) — `src/domain/notifications/whatsapp-queue-service.ts`
+- Cron endpoint `/api/cron/process-whatsapp` — `app/api/cron/process-whatsapp/route.ts`
+- Config API (GET/PATCH) for admin — `app/api/admin/whatsapp-config/route.ts`
+- Jobs API (GET/POST) for admin monitoring — `app/api/admin/whatsapp-jobs/route.ts`
+- Settings page with enable toggle, API URL, and API key — `app/(private)/admin/whatsapp-settings/`
+- Jobs monitoring page with status tabs and pagination — `app/(private)/admin/whatsapp-jobs/`
+- WhatsApp JobsStatus component — `components/admin/WhatsAppJobsStatus.tsx`
+- Navigation links for admin
+- WhatsApp integrated into all notification events (task, stage, mention, completed, archived, restored, due-date, inactivity)
+- Firestore rules for whatsappQueue (admin read, server-side write)
+- Firestore indexes for whatsappQueue
+- 11 unit tests for WhatsApp queue and sender
+
 ## Architecture Highlights
 
 ### Security by Design
@@ -149,11 +168,11 @@
 - ✅ Security HTTP headers via middleware
 
 ### Code Organization
-- 24 domain service files across 10 subdirectories
-- 30 Route Handler files
-- 15 private pages (including admin)
-- 15+ React components
-- 15 test files (241 tests passing)
+- 26 domain service files across 11 subdirectories
+- 32 Route Handler files
+- 17 private pages (including admin)
+- 16+ React components
+- 16 test files (252 tests passing)
 - Clear separation of concerns
 - Type-safe throughout
 
@@ -161,10 +180,10 @@
 
 | Suite | Count | Status |
 |-------|-------|--------|
-| Unit tests (RBAC, workflow, history, notifications, archive, email-templates, inactivity) | 7 files | ✅ Passing |
+| Unit tests (RBAC, workflow, history, notifications, archive, email-templates, inactivity, whatsapp) | 8 files | ✅ Passing |
 | Contract tests (tasks, comments/attachments, alerts, admin, me) | 5 files | ✅ Passing |
 | Integration tests (Kanban, Firestore rules, quickstart) | 3 files | ✅ Passing |
-| **Total** | **15 files, 241 tests** | **✅ All passing** |
+| **Total** | **16 files, 252 tests** | **✅ All passing** |
 
 ## Quality Gates
 
@@ -172,7 +191,7 @@
 |------|--------|
 | TypeScript strict (`tsc --noEmit`) | ✅ 0 errors |
 | ESLint (`--max-warnings 0`) | ✅ 0 errors, 0 warnings |
-| Tests (`npm test`) | ✅ 241 passing |
+| Tests (`npm test`) | ✅ 252 passing |
 | Build (`npm run build`) | ✅ Clean |
 
 ## Known Future Improvements (not blocking)
