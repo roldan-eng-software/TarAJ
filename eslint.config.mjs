@@ -13,6 +13,7 @@ export default [
       '.env*',
       'out/',
       '.git/',
+      'whatsapp-baileys/',
     ],
   },
   {

@@ -1,0 +1,16 @@
+whatsapp-baileys/
+tests/
+firebase/
+scripts/
+*.json
+!package.json
+!tsconfig.json
+!next.config.mjs
+!tailwind.config.ts
+!postcss.config.mjs
+!eslint.config.mjs
+!playwright.config.ts
+!vitest.config.ts
+.vercel/
+.next/
+node_modules/
