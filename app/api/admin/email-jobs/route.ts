@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import {
+  getEmailJobsByStatus,
   getPendingEmails,
   updateEmailJobStatus,
   countPendingEmails,
   processPendingEmails,
 } from '@/src/domain/notifications/email-queue-service';
+import type { EmailJobStatus } from '@/src/domain/notifications/email-queue-service';
 import { getSessionFromRequest } from '@/src/lib/session';
 import { logAudit } from '@/src/domain/audit/audit-service';
 
@@ -17,12 +19,21 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = parseInt(searchParams.get('limit') || '100');
+    const statusParam = searchParams.get('status') || 'pending';
 
-    const pendingJobs = await getPendingEmails(limit);
+    const validStatuses: (EmailJobStatus | 'all')[] = ['all', 'pending', 'sent', 'failed', 'bounced'];
+    const status = validStatuses.includes(statusParam as EmailJobStatus | 'all')
+      ? (statusParam as EmailJobStatus | 'all')
+      : 'pending';
+
+    const jobs = status === 'pending'
+      ? await getPendingEmails(limit)
+      : await getEmailJobsByStatus(status, limit);
+
     const totalPending = await countPendingEmails();
 
-    return NextResponse.json({ jobs: pendingJobs, totalPending });
+    return NextResponse.json({ jobs, totalPending, currentFilter: status });
   } catch (error) {
     console.error('Error fetching email jobs:', error);
     return NextResponse.json({ error: 'Failed to fetch email jobs' }, { status: 500 });

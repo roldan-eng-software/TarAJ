@@ -118,6 +118,30 @@ export async function getEmailJob(jobId: string): Promise<EmailJob | null> {
 }
 
 /**
+ * Get email jobs by status
+ */
+export async function getEmailJobsByStatus(
+  status: EmailJobStatus | 'all',
+  limit: number = 100
+): Promise<EmailJob[]> {
+  const baseQuery = adminDb.collection('emailQueue').orderBy('createdAt', 'desc');
+
+  const snapshot = status === 'all'
+    ? await baseQuery.limit(limit).get()
+    : await baseQuery.where('status', '==', status).limit(limit).get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt) || new Date(),
+      sentAt: data.sentAt?.toDate?.() || null,
+    } as EmailJob;
+  });
+}
+
+/**
  * Count pending emails
  */
 export async function countPendingEmails(): Promise<number> {

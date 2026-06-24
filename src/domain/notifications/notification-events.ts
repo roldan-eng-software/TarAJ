@@ -56,14 +56,16 @@ async function notifyRecipients(
           text: emailBody,
           html: emailHtml,
         });
-      } catch {
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error(`[sendEmail] SMTP error for ${info.email}: ${errorMessage}`, { taskId: task.id, eventType });
         await queueEmail(
           info.email,
           info.displayName,
           emailSubject,
           emailBody,
           emailHtml,
-          { ...metadata, taskId: task.id, eventType }
+          { ...metadata, taskId: task.id, eventType, smtpError: errorMessage }
         );
       }
     }

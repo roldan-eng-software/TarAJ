@@ -7,6 +7,15 @@ import type { EmailJob } from '@/src/types/domain';
 
 const ITEMS_PER_PAGE = 20;
 
+type StatusFilter = 'pending' | 'sent' | 'failed' | 'all';
+
+const TABS: { label: string; value: StatusFilter }[] = [
+  { label: 'Pendentes', value: 'pending' },
+  { label: 'Enviados', value: 'sent' },
+  { label: 'Falhos', value: 'failed' },
+  { label: 'Todos', value: 'all' },
+];
+
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
   sent: 'bg-green-100 text-green-800',
@@ -20,12 +29,13 @@ export function EmailJobsStatus() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState<StatusFilter>('pending');
 
-  const fetchJobs = useCallback(async () => {
+  const fetchJobs = useCallback(async (statusFilter: StatusFilter) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/admin/email-jobs?limit=200', {
+      const res = await fetch(`/api/admin/email-jobs?limit=200&status=${statusFilter}`, {
         credentials: 'include',
       });
 
@@ -44,8 +54,8 @@ export function EmailJobsStatus() {
   }, []);
 
   useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+    fetchJobs(filter);
+  }, [filter, fetchJobs]);
 
   const handleProcessNow = async () => {
     try {
@@ -59,7 +69,7 @@ export function EmailJobsStatus() {
 
       if (!res.ok) throw new Error('Failed to process emails');
 
-      await fetchJobs();
+      await fetchJobs(filter);
     } catch (err) {
       setError('Falha ao processar emails');
       console.error(err);
@@ -78,18 +88,38 @@ export function EmailJobsStatus() {
 
   return (
     <div>
+      {/* Tabs */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-600">
-          {totalPending > 0
-            ? `${totalPending} job${totalPending > 1 ? 's' : ''} pendente${totalPending > 1 ? 's' : ''}`
-            : 'Nenhum job pendente'}
-        </p>
-        <button
-          onClick={handleProcessNow}
-          className="px-4 py-2 text-sm font-medium bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition cursor-pointer"
-        >
-          Processar agora
-        </button>
+        <div className="flex gap-1">
+          {TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setFilter(tab.value)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition cursor-pointer ${
+                filter === tab.value
+                  ? 'bg-sky-100 text-sky-800 border border-sky-300'
+                  : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-3">
+          {totalPending > 0 && (
+            <span className="text-sm text-gray-600">
+              {totalPending} pendente{totalPending > 1 ? 's' : ''}
+            </span>
+          )}
+          {filter === 'pending' && (
+            <button
+              onClick={handleProcessNow}
+              className="px-4 py-2 text-sm font-medium bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition cursor-pointer"
+            >
+              Processar agora
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (
