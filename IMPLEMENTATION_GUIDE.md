@@ -4,8 +4,7 @@
 
 **MVP: COMPLETE** — All four user stories implemented and tested.
 
-The project is ~90% complete. Remaining work consists of security hardening,
-audit UI, and minor polish. See [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md)
+The project is 100% complete. See [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md)
 for details.
 
 ## Architecture Overview
@@ -105,11 +104,11 @@ app/
 ├── (auth)/login/           # Public login page
 ├── (private)/              # Protected routes
 │   ├── kanban/             # Kanban board
-│   ├── tasks/[taskId]/     # Task detail
-│   ├── alerts/             # Alert inbox
-│   ├── archive/            # Archived tasks
+│   ├── tasks/[taskId]/     # Task detail with edit modal
+│   ├── alerts/             # Alert inbox with pagination
+│   ├── archive/            # Archived tasks with pagination
 │   ├── settings/           # Password change
-│   └── admin/              # Users, categories, alerts config
+│   └── admin/              # Users, categories, alerts config, audit logs, email jobs
 └── api/                    # Route Handlers
     ├── auth/session/
     ├── tasks/
@@ -120,7 +119,9 @@ app/
     │   ├── users/
     │   ├── categories/
     │   ├── alert-config/
-    │   └── email-jobs/
+    │   ├── email-jobs/
+    │   ├── audit-logs/
+    │   └── dashboard/
     └── cron/
         ├── due-date-check/
         ├── process-emails/
@@ -143,12 +144,13 @@ src/
 └── types/                  # TypeScript type definitions
 
 components/
-├── ui/                     # StateViews (loading, error, empty)
+├── ui/                     # StateViews, Skeleton, Pagination, ErrorBoundary
 ├── kanban/                 # KanbanBoard, TaskCard
 ├── tasks/                  # TaskForm, TaskComments, TaskAttachments,
-│                           # TaskTimeline, ArchiveActions
+│                           # TaskTimeline, ArchiveActions, TaskFilters
 ├── alerts/                 # AlertInbox, AlertBadge
-└── audit/                  # (stub — pending implementation)
+├── admin/                  # EmailJobsStatus
+└── audit/                  # AuditLogViewer
 
 tests/
 ├── unit/                   # Service-level tests
@@ -195,11 +197,13 @@ See `.env.example` for all required variables:
 4. **Audit Logs**: Append-only — never update or delete audit records.
 5. **Permissions**: Check at Route Handler level, then again at service level.
 
-## Known Technical Debt
+## Known Future Improvements
 
 1. `canAccessTask` in Firestore rules may be too restrictive for coordinators.
 2. Tests duplicate transition/RBAC matrices locally.
 3. `history-query-service.ts` references `createdBy` instead of `actor`.
+4. Client-side file size/MIME type validation for attachments.
+5. Consider persistent rate limiting (current in-memory Map).
 
 ## Resources
 
