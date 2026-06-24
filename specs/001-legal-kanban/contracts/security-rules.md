@@ -63,11 +63,6 @@ Denied:
 - Direct client create/update/delete.
 - Ordinary deletion.
 
-**⚠️ Known Deviation**: Current rules allow `create` if
-`request.resource.data.createdBy == request.auth.uid`, which permits
-client-side history writes. This contradicts the "server-side-only writer"
-principle and should be tightened in a future hardening pass.
-
 ### tasks/{taskId}/comments
 
 Allowed:
@@ -104,10 +99,6 @@ Denied:
 - Users reading another user's alerts.
 - Client creating arbitrary alerts.
 
-**⚠️ Known Deviation**: Current rules allow `create` if `request.auth != null`,
-which permits any authenticated client to create alerts. This contradicts the
-"server-side-only writer" principle and should be tightened.
-
 ### auditLogs
 
 Allowed:
@@ -119,10 +110,6 @@ Denied:
 
 - Client create/update/delete.
 - Non-audit readers.
-
-**⚠️ Known Deviation**: Current rules allow `create` if `request.auth != null`,
-which permits any authenticated client to write audit logs. This contradicts the
-"server-side-only writer" principle and should be tightened.
 
 ## Storage Paths
 

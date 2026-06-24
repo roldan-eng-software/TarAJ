@@ -4,6 +4,17 @@ import type { NextRequest } from 'next/server';
 const publicPaths = ['/login', '/forgot-password'];
 const publicApiPaths = ['/api/auth/session', '/api/auth/forgot-password'];
 
+function addSecurityHeaders(response: NextResponse): NextResponse {
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  return response;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('session')?.value;
@@ -15,17 +26,17 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/_next/') || pathname.startsWith('/favicon') || pathname === '/';
 
   if (isStatic || isPublic || isPublicApi) {
-    return NextResponse.next();
+    return addSecurityHeaders(NextResponse.next());
   }
 
   if (!token) {
     if (isApi) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return addSecurityHeaders(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
     }
-    return NextResponse.redirect(new URL('/login', request.url));
+    return addSecurityHeaders(NextResponse.redirect(new URL('/login', request.url)));
   }
 
-  return NextResponse.next();
+  return addSecurityHeaders(NextResponse.next());
 }
 
 export const config = {

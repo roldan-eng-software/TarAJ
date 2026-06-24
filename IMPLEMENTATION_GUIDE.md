@@ -197,13 +197,9 @@ See `.env.example` for all required variables:
 
 ## Known Technical Debt
 
-1. Firestore rules allow direct client writes to `history`, `alerts`,
-   `auditLogs` — needs hardening.
-2. `canAccessTask` in Firestore rules may be too restrictive for coordinators.
-3. Session token stored in cookie without `httpOnly` flag.
-4. No Next.js middleware for route protection.
-5. Tests duplicate transition/RBAC matrices locally.
-6. `history-query-service.ts` references `createdBy` instead of `actor`.
+1. `canAccessTask` in Firestore rules may be too restrictive for coordinators.
+2. Tests duplicate transition/RBAC matrices locally.
+3. `history-query-service.ts` references `createdBy` instead of `actor`.
 
 ## Resources
 

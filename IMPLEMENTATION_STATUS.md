@@ -1,8 +1,8 @@
 # Implementation Status Report
 
 **Project**: Sistema Kanban Jurídico Interno  
-**Date**: 2026-06-22  
-**Status**: Core MVP Complete (~90%) — Remaining: Polish, Security Hardening, Audit UI
+**Date**: 2026-06-24  
+**Status**: Core MVP Complete (~95%) — Remaining: Audit UI, Minor Polish
 
 ## Completed Work Summary
 
@@ -103,12 +103,13 @@
 
 ## Remaining Work
 
-### Security Hardening (Priority: HIGH)
-- Firestore rules: block direct client writes to `history`, `alerts`, `auditLogs`
-- Review `canAccessTask` scope for coordinators
-- Add Next.js middleware for route protection
-- Add httpOnly flag to session cookie
-- Add rate limiting to API routes
+### Security Hardening ✅ COMPLETE
+- Firestore rules: block direct client writes to `history`, `alerts`, `auditLogs` — verified in `firebase/firestore.rules`
+- Session cookie httpOnly/secure/sameSite — implemented in `app/api/auth/session/route.ts`
+- Rate limiting on session and forgot-password endpoints — implemented in `src/lib/rate-limit.ts`
+- Next.js middleware for route protection — implemented in `middleware.ts`
+- Security HTTP headers (X-Content-Type-Options, X-Frame-Options, HSTS, etc.) — added to `middleware.ts`
+- Security rules documentation updated to match implementation
 
 ### Missing Features (Priority: MEDIUM)
 - Audit log viewer UI (components/audit/ is a stub)
@@ -133,7 +134,9 @@
 - ✅ Immutable audit logs
 - ✅ Append-only history
 - ✅ Centralized workflow validation
-- ⚠️ Session token cookie needs httpOnly flag
+- ✅ HttpOnly session cookie with secure flag
+- ✅ Rate limiting on auth endpoints
+- ✅ Security HTTP headers via middleware
 
 ### Code Organization
 - 21 domain service files across 10 subdirectories
