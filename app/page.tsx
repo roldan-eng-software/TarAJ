@@ -3,10 +3,10 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center p-6 sm:p-12 lg:p-24 bg-gray-50">
       <div className="w-full max-w-md sm:max-w-lg lg:max-w-2xl text-center">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 leading-tight">
-          Sistema Kanban para Tarefas da Associação Jurídica Regional 507
+          Sistema Kanban para acompanhamento de tarefas
         </h1>
         <p className="text-sm sm:text-base text-gray-600 mb-8">
-          Acompanhamento de tarefas dos Colaboradores
+          Acompanhamento de tarefas
         </p>
         <a
           href="/login"

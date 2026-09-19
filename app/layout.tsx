@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import './globals.css';
 
 export const metadata = {
-  title: 'Sistema Jurídico - AJ Regional',
-  description: 'Acompanhamento de tarefas jurídicas em Kanban',
+  title: 'Sistema Kanban',
+  description: 'Acompanhamento de tarefas',
   icons: {
     icon: '/favicon.svg',
   },
